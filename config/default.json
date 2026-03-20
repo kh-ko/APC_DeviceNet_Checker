@@ -1,0 +1,17 @@
+{
+  "device_name": "A사 모터 드라이브",
+  "poll": {
+    "input": [
+      {"byte_offset": 0, "length": 1, "name": "장비 상태 (Status)", "type": "hex"},
+      {"byte_offset": 1, "length": 2, "name": "현재 속도 (RPM)", "type": "int16"}
+    ],
+    "output": [
+      {"byte_offset": 0, "length": 1, "name": "제어 명령 (Command)", "type": "hex"},
+      {"byte_offset": 1, "length": 2, "name": "목표 속도 (RPM)", "type": "int16"}
+    ]
+  },
+  "explicit": [
+    {"name": "에러 로그 읽기", "class": 42, "instance": 1, "attribute": 5, "operation": "read"},
+    {"name": "가속 시간 설정", "class": 42, "instance": 1, "attribute": 6, "operation": "write"}
+  ]
+}
