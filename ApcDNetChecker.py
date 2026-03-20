@@ -68,12 +68,6 @@ class DNetMainWindow(QMainWindow):
         self.toolbar.addAction(self.disconnect_action)
         self.toolbar.addSeparator()
 
-        # 장치 관리(만들기) 액션 추가
-        self.device_manager_action = QAction("장치 관리", self)
-        self.device_manager_action.triggered.connect(self.open_device_manager)
-        self.toolbar.addAction(self.device_manager_action)
-        self.toolbar.addSeparator()
-
         # 장치 검색 액션 추가
         self.search_action = QAction("장치 검색", self)
         self.search_action.triggered.connect(self.search_devices)
@@ -259,10 +253,6 @@ class DNetMainWindow(QMainWindow):
 
     def show_log(self):
         self.log_manager.show_log_window()
-
-    def open_device_manager(self):
-        dialog = DeviceManagerDialog(self)
-        dialog.exec()
 
     def refresh_ports(self):
         self.port_combo.clear()
