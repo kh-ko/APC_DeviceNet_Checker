@@ -7,6 +7,7 @@ from log_manager.console_widget import ConsoleWidget, MsgType
 from i7565dnm_helper import i7565dnm_helper
 from device_search_dialog import DeviceSearchDialog
 import serial.tools.list_ports
+from protocol_model import DeviceConfig
 
 # 실행 시점에는 임포트하지 않고, 타입 검사 시에만 임포트하여 순환 참조 방지
 if TYPE_CHECKING:
@@ -18,6 +19,9 @@ class MainController:
         self.connected_port  = None
 
         self.console: ConsoleWidget = view.log_widget
+
+        self.device_config : DeviceConfig = DeviceConfig.from_json_file("./device_config.json")
+        self.view.build_contents(self.device_config)
 
         self.i7565dnm_helper = i7565dnm_helper()
         self.__load_dll()
@@ -79,8 +83,6 @@ class MainController:
         dialog = DeviceSearchDialog(self.connected_port, self.view)
         dialog.exec()
 
-
-    
     def refresh_ports(self):
         self.console.add_message(MsgType.INFO, "포트 목록을 새로고침합니다.")
         self.view.comport_combo.clear()
@@ -92,4 +94,13 @@ class MainController:
 
         for port in ports:
             self.view.comport_combo.addItem(f"{port.device} - {port.description}")
+
+    def shutdown(self):
+        """프로그램이 종료될 때 열려있는 포트가 있다면 안전하게 닫습니다."""
+        if self.connected_port is not None and self.i7565dnm_helper.dnm_lib:
+            self.console.add_message(MsgType.INFO, "프로그램 종료 중... 장치 연결을 안전하게 해제합니다.")
+            result = self.i7565dnm_helper.dnm_lib.I7565DNM_CloseModule(self.connected_port)
+            if result == 0:
+                self.console.add_message(MsgType.INFO, f"COM{self.connected_port} 해제 완료.")
+            self.connected_port = None
     

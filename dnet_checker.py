@@ -2,11 +2,12 @@ from log_manager.console_widget import ConsoleWidget
 import sys
 from PySide6.QtWidgets import QApplication, QMainWindow, QToolBar, QStatusBar, QSplitter, QTabWidget, QWidget, QVBoxLayout, QLabel, QTextEdit, QComboBox
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QCloseEvent
 import qdarktheme
 
 from log_manager.console_widget import ConsoleWidget
 from main_controller import MainController
+from protocol_model import DeviceConfig
 
 class MyWindow(QMainWindow):
     def __init__(self):
@@ -96,6 +97,18 @@ class MyWindow(QMainWindow):
         self.action_disconnect.triggered.connect(self.main_controller.disconnect_device)
         self.action_slave_search.triggered.connect(self.main_controller.search_devices)
 
+    def build_contents(self, device_config: DeviceConfig):
+        pass
+
+    def closeEvent(self, event: QCloseEvent):
+        """창의 X 버튼을 누르거나 프로그램이 종료될 때 실행됩니다."""
+        print("종료")
+        # MainController의 안전 종료 메서드 호출
+        if hasattr(self, 'main_controller'):
+            self.main_controller.shutdown()
+            
+        # 정상적으로 창 닫기 이벤트 승인
+        event.accept()
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     
