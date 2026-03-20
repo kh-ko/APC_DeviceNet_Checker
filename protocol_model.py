@@ -1,3 +1,4 @@
+import os
 import json
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
@@ -19,7 +20,7 @@ class PollItem:
     name: str
     sequence_num: int
     enabled: bool
-    offset: str
+    offset: int
     type: str
     ui_type: str
     enum_list: Optional[List[EnumItem]] = None

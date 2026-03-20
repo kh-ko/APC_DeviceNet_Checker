@@ -8,6 +8,7 @@ import qdarktheme
 from log_manager.console_widget import ConsoleWidget
 from main_controller import MainController
 from protocol_model import DeviceConfig
+from custom_component.pollin_group_widget import PollInListWidget
 
 class MyWindow(QMainWindow):
     def __init__(self):
@@ -67,19 +68,14 @@ class MyWindow(QMainWindow):
         tab_widget = QTabWidget()
         
         # 첫 번째 탭 (Poll)
-        tab_poll = QWidget()
-        layout_poll = QVBoxLayout()
-        layout_poll.addWidget(QLabel("Poll 탭 화면입니다."))
-        tab_poll.setLayout(layout_poll)
-        
+        self.tab_poll = QWidget()
+        self.layout_poll = QVBoxLayout(self.tab_poll)
         # 두 번째 탭 (Explicit)
-        tab_explicit = QWidget()
-        layout_explicit = QVBoxLayout()
-        layout_explicit.addWidget(QLabel("Explicit 탭 화면입니다."))
-        tab_explicit.setLayout(layout_explicit)
+        self.tab_explicit = QWidget()
+        self.layout_explicit = QVBoxLayout(self.tab_explicit) # 멤버 변수로 저장
         
-        tab_widget.addTab(tab_poll, "Poll")
-        tab_widget.addTab(tab_explicit, "Explicit")
+        tab_widget.addTab(self.tab_poll, "Poll")
+        tab_widget.addTab(self.tab_explicit, "Explicit")
 
         # --- Splitter 하단: 로그 뷰어 용도 구성 ---
         self.log_widget = ConsoleWidget(self)
@@ -98,7 +94,35 @@ class MyWindow(QMainWindow):
         self.action_slave_search.triggered.connect(self.main_controller.search_devices)
 
     def build_contents(self, device_config: DeviceConfig):
-        pass
+        """DeviceConfig 모델을 받아서 동적으로 UI를 구성합니다."""
+        
+        # 1. 기존 레이아웃 초기화 (다른 설정 로드 시 기존 UI 제거)
+        while self.layout_poll.count():
+            child = self.layout_poll.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+                
+        while self.layout_explicit.count():
+            child = self.layout_explicit.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # 2. Poll 탭 구성 (상: Poll-Out / 하: Poll-In 분할)
+        poll_splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        #poll_out_panel = PollOutWidget(device_config.poll_out)
+        poll_in_panel = PollInListWidget(device_config.poll_in)
+        
+        #poll_splitter.addWidget(poll_out_panel)
+        poll_splitter.addWidget(poll_in_panel)
+        # 상하 1:1 비율로 초기 설정
+        poll_splitter.setSizes([400, 400]) 
+        
+        self.layout_poll.addWidget(poll_splitter)
+
+        # 3. Explicit 탭 구성
+        #explicit_panel = ExplicitWidget(device_config.explicit_messages)
+        #self.layout_explicit.addWidget(explicit_panel)
 
     def closeEvent(self, event: QCloseEvent):
         """창의 X 버튼을 누르거나 프로그램이 종료될 때 실행됩니다."""

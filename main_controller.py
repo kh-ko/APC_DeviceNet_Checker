@@ -20,7 +20,7 @@ class MainController:
 
         self.console: ConsoleWidget = view.log_widget
 
-        self.device_config : DeviceConfig = DeviceConfig.from_json_file("./device_config.json")
+        self.device_config : DeviceConfig = DeviceConfig.from_json_file("./device_configs.json")
         self.view.build_contents(self.device_config)
 
         self.i7565dnm_helper = i7565dnm_helper()

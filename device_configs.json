@@ -1,6 +1,6 @@
 {
     "poll-out":[
-        {"name": "Control Mode"                 , "sequence_num" : 0, "enabled": true, "offset": "0" , "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "Control Mode"                 , "sequence_num" : 0, "enabled": true, "offset": 0 , "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "CLOSE"     , "value": 0 },
                 { "text": "OPEN"      , "value": 1 },
@@ -10,87 +10,87 @@
                 { "text": "REBOOT"    , "value": 5 } 
             ] 
         },
-        {"name": "SETPOINT-INT(2)"              , "sequence_num" : 1, "enabled": true, "offset": "1" , "type": "int16"   , "ui_type": "number" },
-        {"name": "SETPOINT-FLOAT(4)"            , "sequence_num" : 2, "enabled": true, "offset": "3" , "type": "float"   , "ui_type": "real"   },
-        {"name": "SETPOINT-TYPE(1)"             , "sequence_num" : 3, "enabled": true, "offset": "7" , "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "SETPOINT-INT(2)"              , "sequence_num" : 1, "enabled": true, "offset": 1 , "type": "int16"   , "ui_type": "number" },
+        {"name": "SETPOINT-FLOAT(4)"            , "sequence_num" : 2, "enabled": true, "offset": 3 , "type": "float"   , "ui_type": "real"   },
+        {"name": "SETPOINT-TYPE(1)"             , "sequence_num" : 3, "enabled": true, "offset": 7 , "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "PRESSURE_CONTROL", "value": 0 },
                 { "text": "POSITION_CONTROL", "value": 1 }
             ] 
         },
-        {"name": "LEARN(1)"                     , "sequence_num" : 4, "enabled": true, "offset": "8" , "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "LEARN(1)"                     , "sequence_num" : 4, "enabled": true, "offset": 8 , "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "NOTHING WORKS", "value": 0 },
                 { "text": "START LEARN"  , "value": 1 }
             ] 
         },
-        {"name": "LEARN PRESSURE LIMIT-INT(2)"  , "sequence_num" : 5, "enabled": true, "offset": "9" , "type": "int16"   , "ui_type": "number" },
-        {"name": "LEARN PRESSURE LIMIT-FLOAT(4)", "sequence_num" : 6, "enabled": true, "offset": "11", "type": "float"   , "ui_type": "real"   },
-        {"name": "ZERO(1)"                      , "sequence_num" : 7, "enabled": true, "offset": "15", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "LEARN PRESSURE LIMIT-INT(2)"  , "sequence_num" : 5, "enabled": true, "offset": 9 , "type": "int16"   , "ui_type": "number" },
+        {"name": "LEARN PRESSURE LIMIT-FLOAT(4)", "sequence_num" : 6, "enabled": true, "offset": 11, "type": "float"   , "ui_type": "real"   },
+        {"name": "ZERO(1)"                      , "sequence_num" : 7, "enabled": true, "offset": 15, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "NOTHING WORKS"  , "value": 0 },
                 { "text": "INITIALIZE ZERO", "value": 1 }
             ] 
         },
-        {"name": "PRESSURE CONTROL MODE(1)"     , "sequence_num" : 8, "enabled": true, "offset": "16", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "PRESSURE CONTROL MODE(1)"     , "sequence_num" : 8, "enabled": true, "offset": 16, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "ADAPTIVE CONTROL", "value": 0 },
                 { "text": "FIXED CONTROL"   , "value": 1 }
             ] 
         },
-        {"name": "WRITE CONTROL PARAMETER(1)"   , "sequence_num" : 9, "enabled": true, "offset": "17", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "WRITE CONTROL PARAMETER(1)"   , "sequence_num" : 9, "enabled": true, "offset": 17, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "Not Used"  , "value": 0 }
             ] 
         },
-        {"name": "ADAPTIVE GAIN(4)"             , "sequence_num" : 10, "enabled": true, "offset": "18", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE SENSOR DELAY(4)"     , "sequence_num" : 11, "enabled": true, "offset": "22", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE RAMP TIME(4)"        , "sequence_num" : 12, "enabled": true, "offset": "26", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE RAMP MODE(1)"        , "sequence_num" : 13, "enabled": true, "offset": "30", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "ADAPTIVE GAIN(4)"             , "sequence_num" : 10, "enabled": true, "offset": 18, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE SENSOR DELAY(4)"     , "sequence_num" : 11, "enabled": true, "offset": 22, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE RAMP TIME(4)"        , "sequence_num" : 12, "enabled": true, "offset": 26, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE RAMP MODE(1)"        , "sequence_num" : 13, "enabled": true, "offset": 30, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "CONSTANT TIME" , "value": 0 },
                 { "text": "CONSTANT SLOPE", "value": 1 }
             ] 
         },
-        {"name": "FIXED P-GAIN(4)"              , "sequence_num" : 14, "enabled": true, "offset": "31", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED I-GAIN(4)"              , "sequence_num" : 15, "enabled": true, "offset": "35", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED RAMP TIME(4)"           , "sequence_num" : 16, "enabled": true, "offset": "39", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED RAMP MODE(1)"           , "sequence_num" : 17, "enabled": true, "offset": "43", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "FIXED P-GAIN(4)"              , "sequence_num" : 14, "enabled": true, "offset": 31, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED I-GAIN(4)"              , "sequence_num" : 15, "enabled": true, "offset": 35, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED RAMP TIME(4)"           , "sequence_num" : 16, "enabled": true, "offset": 39, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED RAMP MODE(1)"           , "sequence_num" : 17, "enabled": true, "offset": 43, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "CONSTANT TIME" , "value": 0 },
                 { "text": "CONSTANT SLOPE", "value": 1 }
             ] 
         },
-        {"name": "FIXED DIRECTION MODE(1)"      , "sequence_num" : 18, "enabled": true, "offset": "44", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "FIXED DIRECTION MODE(1)"      , "sequence_num" : 18, "enabled": true, "offset": 44, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "DOWNSTREAM"  , "value": 0 },
                 { "text": "UPSTREAM"    , "value": 1 }
             ] 
         },
-        {"name": "ADAPTIVE DELTA GAIN(4)"       , "sequence_num" : 19, "enabled": true, "offset": "45", "type": "float"   , "ui_type": "real"  },
-        {"name": "CALIBRATION(1)"               , "sequence_num" : 20, "enabled": true, "offset": "49", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "ADAPTIVE DELTA GAIN(4)"       , "sequence_num" : 19, "enabled": true, "offset": 45, "type": "float"   , "ui_type": "real"  },
+        {"name": "CALIBRATION(1)"               , "sequence_num" : 20, "enabled": true, "offset": 49, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "NOTHING WORKS", "value": 0 },
                 { "text": "START SYNC"   , "value": 1 }
             ] 
         },
-        {"name": "DUMMY(1)"                     , "sequence_num" : 21, "enabled": true, "offset": "50", "type": "uint8"   , "ui_type": "number"}
+        {"name": "DUMMY(1)"                     , "sequence_num" : 21, "enabled": true, "offset": 50, "type": "uint8"   , "ui_type": "number"}
     ],
     "poll-in":[
-        {"name": "EXCEPTION STATUS(1)"          , "sequence_num" : 0 , "enabled": true, "offset": "0" , "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "EXCEPTION STATUS(1)"          , "sequence_num" : 0 , "enabled": true, "offset": 0 , "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "Manufacturer specific alarm present"  , "value": 192 },
                 { "text": "Manufacturer specific warning present", "value": 132 },
                 { "text": "No warning, no error present"         , "value": 128 }
             ] 
         },
-        {"name": "PRESSURE-INT(2)"              , "sequence_num" : 1 , "enabled": true, "offset": "1" , "type": "int16"   , "ui_type": "number"},
-        {"name": "PRESSURE-FLOAT(4)"            , "sequence_num" : 2 , "enabled": true, "offset": "3" , "type": "float"   , "ui_type": "real"  },
-        {"name": "SETPOINT-INT(2)"              , "sequence_num" : 3 , "enabled": true, "offset": "7" , "type": "int16"   , "ui_type": "number"},
-        {"name": "SETPOINT-FLOAT(4)"            , "sequence_num" : 4 , "enabled": true, "offset": "9" , "type": "float"   , "ui_type": "real"  },
-        {"name": "POSITION-INT(2)"              , "sequence_num" : 5 , "enabled": true, "offset": "13", "type": "int16"   , "ui_type": "number"},
-        {"name": "POSITION-FLOAT(4)"            , "sequence_num" : 6 , "enabled": true, "offset": "15", "type": "float"   , "ui_type": "real"  },
-        {"name": "EXCEPTION DETAIL ALARM(15)"   , "sequence_num" : 7 , "enabled": true, "offset": "19", "type": "bytes:15", "ui_type": "bitmap", "map":[
+        {"name": "PRESSURE-INT(2)"              , "sequence_num" : 1 , "enabled": true, "offset": 1 , "type": "int16"   , "ui_type": "number"},
+        {"name": "PRESSURE-FLOAT(4)"            , "sequence_num" : 2 , "enabled": true, "offset": 3 , "type": "float"   , "ui_type": "real"  },
+        {"name": "SETPOINT-INT(2)"              , "sequence_num" : 3 , "enabled": true, "offset": 7 , "type": "int16"   , "ui_type": "number"},
+        {"name": "SETPOINT-FLOAT(4)"            , "sequence_num" : 4 , "enabled": true, "offset": 9 , "type": "float"   , "ui_type": "real"  },
+        {"name": "POSITION-INT(2)"              , "sequence_num" : 5 , "enabled": true, "offset": 13, "type": "int16"   , "ui_type": "number"},
+        {"name": "POSITION-FLOAT(4)"            , "sequence_num" : 6 , "enabled": true, "offset": 15, "type": "float"   , "ui_type": "real"  },
+        {"name": "EXCEPTION DETAIL ALARM(15)"   , "sequence_num" : 7 , "enabled": true, "offset": 19, "type": "bytes:15", "ui_type": "bitmap", "map":[
             {"byte_index":  0, "name": "PCV Common Exception Detail Size"     , "bits": ["0", "0", "0", "0", "0", "0", "1", "0"]},
             {"byte_index":  1, "name": "PCV Common Exception Detail Byte #0"  , "bits": ["0", "0", "0", "0", "0", "0", "0", "0"]},
             {"byte_index":  2, "name": "PCV Common Exception Detail Byte #1"  , "bits": ["0", "0", "0", "0", "0", "0", "0", "0"]},
@@ -107,7 +107,7 @@
             {"byte_index": 13, "name": "Manufacturer Exception Detail Byte #5", "bits": ["RSVD", "RSVD"         , "RSVD"          , "E50"         , "E40"          , "E22"        , "E21"          , "E20"       ]},
             {"byte_index": 14, "name": "Manufacturer Exception Detail Byte #6", "bits": ["RSVD", "RSVD"         , "RSVD"          , "RSVD"        , "RSVD"         , "IO data"    , "Setpoint Type", "Ctrl mode" ]}
         ]},
-        {"name": "EXCEPTION DETAIL WARNING(15)" , "sequence_num" : 8 , "enabled": true, "offset": "34", "type": "bytes:15", "ui_type": "bitmap", "map":[
+        {"name": "EXCEPTION DETAIL WARNING(15)" , "sequence_num" : 8 , "enabled": true, "offset": 34, "type": "bytes:15", "ui_type": "bitmap", "map":[
             {"byte_index":  0, "name": "PCV Common Exception Detail Size"     , "bits": ["0", "0", "0", "0", "0", "0", "1", "0"]},
             {"byte_index":  1, "name": "PCV Common Exception Detail Byte #0"  , "bits": ["0", "0", "0", "0", "0", "0", "0", "0"]},
             {"byte_index":  2, "name": "PCV Common Exception Detail Byte #1"  , "bits": ["0", "0", "0", "0", "0", "0", "0", "0"]},
@@ -124,14 +124,14 @@
             {"byte_index": 13, "name": "Manufacturer Exception Detail Byte #5", "bits": ["RSVD", "RSVD"         , "RSVD"          , "E50"         , "E40"          , "E22"        , "E21"          , "E20"       ]},
             {"byte_index": 14, "name": "Manufacturer Exception Detail Byte #6", "bits": ["RSVD", "RSVD"         , "RSVD"          , "RSVD"        , "RSVD"         , "IO data"    , "Setpoint Type", "Ctrl mode" ]}
         ]},        
-        {"name": "VALVE CLOSE/OPEN CHECK(1)"    , "sequence_num" : 9 , "enabled": true, "offset": "49", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "VALVE CLOSE/OPEN CHECK(1)"    , "sequence_num" : 9 , "enabled": true, "offset": 49, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "Valve is neither closed nor open", "value": 0 },
                 { "text": "Valve is closed"                 , "value": 1 },
                 { "text": "Valve is open"                   , "value": 2 }
             ] 
         },
-        {"name": "DEVICE STATUS 2(1)"           , "sequence_num" : 10, "enabled": true, "offset": "50", "type": "uint8", "ui_type": "enum", "enum_list":
+        {"name": "DEVICE STATUS 2(1)"           , "sequence_num" : 10, "enabled": true, "offset": 50, "type": "uint8", "ui_type": "enum", "enum_list":
             [
                 { "text": "Syncronization"  , "value": 1 },
                 { "text": "Position control", "value": 2 },
@@ -145,54 +145,54 @@
                 { "text": "Fatal error"     , "value": 14}
             ] 
         },
-        {"name": "ACCESS MODE(1)"               , "sequence_num" : 11, "enabled": true, "offset": "51", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "ACCESS MODE(1)"               , "sequence_num" : 11, "enabled": true, "offset": 51, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "LOCAL" , "value": 0 },
                 { "text": "REMOTE", "value": 1 },
                 { "text": "LOCKED", "value": 2 }
             ] 
         },
-        {"name": "PRESSURE CONTROL MODE(1)"     , "sequence_num" : 12, "enabled": true, "offset": "52", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "PRESSURE CONTROL MODE(1)"     , "sequence_num" : 12, "enabled": true, "offset": 52, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "ADAPTIVE CONTROL", "value": 0 },
                 { "text": "FIXED CONTROL"   , "value": 1 }
             ] 
         },
-        {"name": "WRITE CONTROL PARAMETER ANALYZER(1)", "sequence_num" : 13, "enabled": true, "offset": "53", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "WRITE CONTROL PARAMETER ANALYZER(1)", "sequence_num" : 13, "enabled": true, "offset": 53, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "Not Used", "value": 0 }
             ] 
         },
-        {"name": "ADAPTIVE GAIN(4)"             , "sequence_num" : 14, "enabled": true, "offset": "54", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE SENSOR DELAY(4)"     , "sequence_num" : 15, "enabled": true, "offset": "58", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE RAMP TIME(4)"        , "sequence_num" : 16, "enabled": true, "offset": "62", "type": "float"   , "ui_type": "real"  },
-        {"name": "ADAPTIVE RAMP MODE(1)"        , "sequence_num" : 17, "enabled": true, "offset": "66", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "ADAPTIVE GAIN(4)"             , "sequence_num" : 14, "enabled": true, "offset": 54, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE SENSOR DELAY(4)"     , "sequence_num" : 15, "enabled": true, "offset": 58, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE RAMP TIME(4)"        , "sequence_num" : 16, "enabled": true, "offset": 62, "type": "float"   , "ui_type": "real"  },
+        {"name": "ADAPTIVE RAMP MODE(1)"        , "sequence_num" : 17, "enabled": true, "offset": 66, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "CONSTANT TIME" , "value": 0 },
                 { "text": "CONSTANT SLOPE", "value": 1 }
             ] 
         },
-        {"name": "FIXED P-GAIN(4)"              , "sequence_num" : 18, "enabled": true, "offset": "67", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED I-GAIN(4)"              , "sequence_num" : 19, "enabled": true, "offset": "71", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED RAMP TIME(4)"           , "sequence_num" : 20, "enabled": true, "offset": "75", "type": "float"   , "ui_type": "real"  },
-        {"name": "FIXED RAMP MODE(1)"           , "sequence_num" : 21, "enabled": true, "offset": "79", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "FIXED P-GAIN(4)"              , "sequence_num" : 18, "enabled": true, "offset": 67, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED I-GAIN(4)"              , "sequence_num" : 19, "enabled": true, "offset": 71, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED RAMP TIME(4)"           , "sequence_num" : 20, "enabled": true, "offset": 75, "type": "float"   , "ui_type": "real"  },
+        {"name": "FIXED RAMP MODE(1)"           , "sequence_num" : 21, "enabled": true, "offset": 79, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "CONSTANT TIME" , "value": 0 },
                 { "text": "CONSTANT SLOPE", "value": 1 }
             ] 
         },
-        {"name": "FIXED DIRECTION MODE(1)"      , "sequence_num" : 22, "enabled": true, "offset": "80", "type": "uint8"   , "ui_type": "enum", "enum_list":
+        {"name": "FIXED DIRECTION MODE(1)"      , "sequence_num" : 22, "enabled": true, "offset": 80, "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
                 { "text": "DOWN STREAM", "value": 0 },
                 { "text": "UP STREAM"  , "value": 1 }
             ] 
         },
-        {"name": "ADAPTIVE DELTA GAIN(4)"       , "sequence_num" : 23, "enabled": true, "offset": "81", "type": "float"   , "ui_type": "real"  },
-        {"name": "SENSOR1 PRESSURE-INT(2)"      , "sequence_num" : 24, "enabled": true, "offset": "85", "type": "int16"   , "ui_type": "number"},
-        {"name": "SENSOR1 PRESSURE-FLOAT(4)"    , "sequence_num" : 25, "enabled": true, "offset": "87", "type": "float"   , "ui_type": "real"  },
-        {"name": "SENSOR2 PRESSURE-INT(2)"      , "sequence_num" : 26, "enabled": true, "offset": "91", "type": "int16"   , "ui_type": "number"},
-        {"name": "SENSOR2 PRESSURE-FLOAT(4)"    , "sequence_num" : 27, "enabled": true, "offset": "93", "type": "float"   , "ui_type": "real"  },
-        {"name": "DUMMY(1)"                     , "sequence_num" : 28, "enabled": true, "offset": "97", "type": "uint8"   , "ui_type": "number"}
+        {"name": "ADAPTIVE DELTA GAIN(4)"       , "sequence_num" : 23, "enabled": true, "offset": 81, "type": "float"   , "ui_type": "real"  },
+        {"name": "SENSOR1 PRESSURE-INT(2)"      , "sequence_num" : 24, "enabled": true, "offset": 85, "type": "int16"   , "ui_type": "number"},
+        {"name": "SENSOR1 PRESSURE-FLOAT(4)"    , "sequence_num" : 25, "enabled": true, "offset": 87, "type": "float"   , "ui_type": "real"  },
+        {"name": "SENSOR2 PRESSURE-INT(2)"      , "sequence_num" : 26, "enabled": true, "offset": 91, "type": "int16"   , "ui_type": "number"},
+        {"name": "SENSOR2 PRESSURE-FLOAT(4)"    , "sequence_num" : 27, "enabled": true, "offset": 93, "type": "float"   , "ui_type": "real"  },
+        {"name": "DUMMY(1)"                     , "sequence_num" : 28, "enabled": true, "offset": 97, "type": "uint8"   , "ui_type": "number"}
     ],
     "explicit_messages": [
         {
