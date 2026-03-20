@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QWidget, QVBoxLayout, QScrollArea
 from PySide6.QtCore import Qt
 from custom_component.pollin_widget import PollInWidget
 
-class PollInListWidget(QWidget):
+class PollListWidget(QWidget):
     """여러 개의 PollInWidget을 스크롤 영역 내에서 관리하는 컨테이너 위젯"""
     def __init__(self, parent=None):
         super().__init__(parent)

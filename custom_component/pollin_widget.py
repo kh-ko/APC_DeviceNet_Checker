@@ -30,6 +30,8 @@ class PollInWidget(QWidget):
 
         self.lbl_name = QLabel(self.dev_item.name)
         self.lbl_name.setMinimumWidth(200)
+        self.lbl_name.setMaximumWidth(200)
+        self.lbl_name.setWordWrap(True)
         top_layout.addWidget(self.lbl_name)
 
         self.lbl_offset = QLabel()

@@ -8,7 +8,7 @@ import qdarktheme
 from log_manager.console_widget import ConsoleWidget
 from main_controller import MainController
 from protocol_model import DeviceConfig
-from custom_component.pollin_group_widget import PollInListWidget
+from custom_component.poll_group_widget import PollListWidget
 
 class MyWindow(QMainWindow):
     def __init__(self):
@@ -110,10 +110,12 @@ class MyWindow(QMainWindow):
         # 2. Poll 탭 구성 (상: Poll-Out / 하: Poll-In 분할)
         poll_splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        #poll_out_panel = PollOutWidget(device_config.poll_out)
-        poll_in_panel = PollInListWidget(device_config.poll_in)
+        poll_out_panel = PollListWidget()
+        poll_out_panel.populate(device_config.poll_in)
+        poll_in_panel = PollListWidget()
+        poll_in_panel.populate(device_config.poll_in)
         
-        #poll_splitter.addWidget(poll_out_panel)
+        poll_splitter.addWidget(poll_out_panel)
         poll_splitter.addWidget(poll_in_panel)
         # 상하 1:1 비율로 초기 설정
         poll_splitter.setSizes([400, 400]) 
