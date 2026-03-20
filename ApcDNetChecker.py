@@ -5,15 +5,15 @@ import re
 import time  # 대기 시간 제어용 추가
 import serial.tools.list_ports
 from PySide6.QtWidgets import (QApplication, QMainWindow, QToolBar, QWidget, 
-                               QVBoxLayout, QLabel, QStatusBar, QComboBox, QDialog, QMessageBox)
+                               QVBoxLayout, QLabel, QStatusBar, QComboBox, QDialog, QMessageBox, QSplitter, QTabWidget)
 from PySide6.QtGui import QAction, QIcon, QFont
 from PySide6.QtCore import Qt
 import qdarktheme
 
-from log_manager.log_manager import LogManager
-from log_manager.console_widget import MsgType
+from log_manager.console_widget import MsgType, ConsoleWidget
 from device_select_dialog import DeviceSelectDialog
 from protocol_model import DeviceConfig
+from main_controller import MainController
 
 class DNetMainWindow(QMainWindow):
     def __init__(self):
@@ -22,25 +22,43 @@ class DNetMainWindow(QMainWindow):
         self.resize(1000, 800)
         
         self.connected_port = None
-        self.log_manager = LogManager()
-        self.log_manager.log("애플리케이션 시작됨", MsgType.INFO)
 
         self._init_ui()
         self._init_toolbar()
         self._load_dll()
         self._load_protocol_model()
 
+        self.mainController = MainController(self)
+
+
     def _init_ui(self):
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
+        main_layout = QVBoxLayout(central_widget)
+        
+        # 1. 메인 화면 상하 분할 스플리터
+        main_splitter = QSplitter(Qt.Orientation.Vertical)
+        main_layout.addWidget(main_splitter)
+        
+        # 2. 상단: 탭 위젯 (Poll 데이터 및 Explicit 등)
+        self.tab_widget = QTabWidget()
+        main_splitter.addWidget(self.tab_widget)
+        
+        # 3. 하단: 내장형 로그 콘솔 위젯
+        self.console_widget = ConsoleWidget(self)
+        main_splitter.addWidget(self.console_widget)
+        
+        # 스플리터 비율 설정 (상단 60%, 하단 40% 비율)
+        main_splitter.setSizes([480, 320])
+
+        # 상태바 및 상태 라벨 설정
+        self.statusBar = QStatusBar(self)
+        self.setStatusBar(self.statusBar)
         
         self.status_label = QLabel("준비")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.status_label.setFont(QFont("Malgun Gothic", 12))
-        layout.addWidget(self.status_label)
-        
-        self.setStatusBar(QStatusBar(self))
+        self.status_label.setFont(QFont("Malgun Gothic", 10))
+        self.statusBar.addPermanentWidget(self.status_label)
 
     def _init_toolbar(self):
         self.toolbar = QToolBar("Main Toolbar")
@@ -54,23 +72,23 @@ class DNetMainWindow(QMainWindow):
         self.toolbar.addWidget(self.port_combo)
 
         self.refresh_action = QAction("새로고침", self)
-        self.refresh_action.triggered.connect(self.refresh_ports)
+        self.refresh_action.triggered.connect(self.mainController.refresh_ports)
         self.toolbar.addAction(self.refresh_action)
         self.toolbar.addSeparator()
 
         self.connect_action = QAction("연결", self)
-        self.connect_action.triggered.connect(self.connect_device)
+        self.connect_action.triggered.connect(self.mainController.connect_device)
         self.toolbar.addAction(self.connect_action)
 
         self.disconnect_action = QAction("연결끊기", self)
-        self.disconnect_action.triggered.connect(self.disconnect_device)
+        self.disconnect_action.triggered.connect(self.mainController.disconnect_device)
         self.disconnect_action.setEnabled(False)
         self.toolbar.addAction(self.disconnect_action)
         self.toolbar.addSeparator()
 
         # 장치 검색 액션 추가
         self.search_action = QAction("장치 검색", self)
-        self.search_action.triggered.connect(self.search_devices)
+        self.search_action.triggered.connect(self.mainController.search_devices)
         self.search_action.setEnabled(False) # 연결 전에는 비활성화
         self.toolbar.addAction(self.search_action)
         self.toolbar.addSeparator()
