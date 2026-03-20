@@ -1,7 +1,11 @@
 import re
+import time
+import ctypes
 from typing import TYPE_CHECKING
+from PySide6.QtWidgets import QApplication, QDialog, QMessageBox
 from log_manager.console_widget import ConsoleWidget, MsgType
 from i7565dnm_helper import i7565dnm_helper
+from device_search_dialog import DeviceSearchDialog
 import serial.tools.list_ports
 
 # 실행 시점에는 임포트하지 않고, 타입 검사 시에만 임포트하여 순환 참조 방지
@@ -21,6 +25,15 @@ class MainController:
     def __load_dll(self):
         result = self.i7565dnm_helper.load_dll()
         self.console.add_message(MsgType.INFO, result)
+
+    def __check_i7565(self):
+        if not self.i7565dnm_helper.dnm_lib: 
+            self.console.add_message(MsgType.ERROR, "i7565DNM DLL을 로드하지 못했습니다.")
+            return False
+        if self.connected_port is None: 
+            self.console.add_message(MsgType.ERROR, "i7565DNM과 연결된 포트가 없습니다.")
+            return False
+        return True
     
     def connect_device(self):
         self.console.add_message(MsgType.INFO, "i7565DNM과 연결합니다.")
@@ -47,12 +60,7 @@ class MainController:
     
     def disconnect_device(self):
         self.console.add_message(MsgType.INFO, "i7565DNM과 연결을 끊습니다.")
-        if not self.i7565dnm_helper.dnm_lib: 
-            self.console.add_message(MsgType.ERROR, "i7565DNM DLL을 로드하지 못했습니다.")
-            return
-
-        if self.connected_port is None: 
-            self.console.add_message(MsgType.ERROR, "i7565DNM과 연결된 포트가 없습니다.")
+        if self.__check_i7565() == False:
             return
             
         result = self.i7565dnm_helper.dnm_lib.I7565DNM_CloseModule(self.connected_port)
@@ -65,6 +73,13 @@ class MainController:
     
     def search_devices(self):
         self.console.add_message(MsgType.INFO, "i7565DNM을 이용하여 slave 장치를 검색합니다.")
+        if self.__check_i7565() == False:
+            return
+        
+        dialog = DeviceSearchDialog(self.connected_port, self.view)
+        dialog.exec()
+
+
     
     def refresh_ports(self):
         self.console.add_message(MsgType.INFO, "포트 목록을 새로고침합니다.")
