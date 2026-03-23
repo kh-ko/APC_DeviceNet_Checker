@@ -59,6 +59,8 @@ class DnetWorker(QObject):
         """
         상태 전이를 수행하고, 상태에 맞는 [Exit] 및 [Entry] 액션을 처리합니다.
         """
+        self.log_msg_signal.emit("INFO", f"상태 변경: {self.state.name} -> {new_state.name}")
+
         if self.state == new_state:
             return
 
@@ -164,6 +166,8 @@ class DnetWorker(QObject):
     # =========================================================================
     @Slot()
     def search_devices(self):
+        self.log_msg_signal.emit("INFO", f"스캔 시작")
+
         if self.state in (WorkerState.DISCONNECTED, WorkerState.SCANNING) or not self.dll:
             self.log_msg_signal.emit("WARNING", f"현재 상태({self.state.name})에서는 스캔을 시작할 수 없습니다.")
             return
@@ -172,7 +176,7 @@ class DnetWorker(QObject):
         self._transition_to(WorkerState.SCANNING)
 
         res = self.dll.I7565DNM_SearchAllDevices(self.current_port)
-        if res == I7565DNM_NO_ERROR:
+        if res == I7565DNM_NO_ERROR or res == DNMXS_NOW_SCANNING:
             self.log_msg_signal.emit("INFO", "네트워크 스캔 시작...")
         else:
             self.log_msg_signal.emit("ERROR", f"네트워크 스캔 시작 실패 (코드: {res})")
@@ -274,9 +278,13 @@ class DnetWorker(QObject):
 
     def _check_search_status(self):
         if self.state != WorkerState.SCANNING or not self.dll:
+            self.log_msg_signal.emit("INFO", f"스캔 진행 오류")
             return
 
         res = self.dll.I7565DNM_IsSearchOK(self.current_port)
+
+        self.log_msg_signal.emit("INFO", f"스캔 진행 중 {res}")
+
         if res == DNMXS_NOW_SCANNING:
             return
             

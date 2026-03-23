@@ -1,9 +1,12 @@
 import sys
 import qdarktheme
-from PySide6.QtWidgets import QApplication, QMainWindow, QToolBar, QDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QToolBar, QDialog, QSplitter, QWidget, QVBoxLayout
 from PySide6.QtGui import QAction, QPalette
+from PySide6.QtCore import QThread, Signal, Qt
 
 from view.connection_dialog import ConnectDialog
+from controller.dnet.dnet_controller import DnetController
+from log_manager.console_widget import ConsoleWidget
 
 
 class HomeWin(QMainWindow):
@@ -13,8 +16,49 @@ class HomeWin(QMainWindow):
         # 윈도우 기본 설정
         self.setWindowTitle("DeviceNet Checker")
         self.resize(1920, 1080)
-
+        
         self.setup_toolbar()
+
+        self.setup_body()
+
+        # DnetController 생성
+        self.dnet_controller = DnetController(self)
+        # 워커 로그를 콘솔 위젯에 연결
+
+    def closeEvent(self, event):
+        self.dnet_controller.shutdown()
+        super().closeEvent(event)
+
+    def setup_body(self):
+        # 중앙 위젯 레이아웃 설정
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        main_layout = QVBoxLayout(central_widget)
+        main_layout.setContentsMargins(2, 2, 2, 2)
+        
+        # 스플리터 생성 (좌/우 분할)
+        self.splitter = QSplitter(Qt.Horizontal)
+        
+        # [왼쪽] 프로토콜/스키마 레이아웃 영역
+        self.left_pane = QWidget()
+        self.left_pane.setObjectName("LeftPane")
+        self.left_layout = QVBoxLayout(self.left_pane)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        # placeholder 등 나중에 추가 가능
+        
+        # [오른쪽] 실시간 로그 콘솔 영역
+        self.console = ConsoleWidget()
+        
+        # 스플리터에 위젯 추가
+        self.splitter.addWidget(self.left_pane)
+        self.splitter.addWidget(self.console)
+        
+        # 좌우 비율 설정 (7:3)
+        self.splitter.setStretchFactor(0, 7)
+        self.splitter.setStretchFactor(1, 3)
+        
+        main_layout.addWidget(self.splitter)
 
     def setup_toolbar(self):
         toolbar = QToolBar("메인 툴바", self)
@@ -61,7 +105,7 @@ class HomeWin(QMainWindow):
         # 4. 버튼 클릭 이벤트(Signal) 연결
         # 버튼을 눌렀을 때 실행될 함수(Slot)를 연결합니다.
         action_connect.triggered.connect(self.on_connect_clicked)
-        action_new.triggered.connect(self.on_new_clicked)
+        #action_new.triggered.connect(self.on_new_clicked)
         action_load.triggered.connect(self.on_load_clicked)
         action_save.triggered.connect(self.on_save_clicked)
         action_save_as.triggered.connect(self.on_save_as_clicked)
@@ -77,7 +121,7 @@ class HomeWin(QMainWindow):
             conn_info = dialog.get_connection_info()
             
             if conn_info["Network"] == "Device Net":
-                
+                self.dnet_controller.connect_module(conn_info)
 
     def on_new_clicked(self):
         print("새 프로젝트를 만듭니다.")
