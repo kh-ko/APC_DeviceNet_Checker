@@ -6,6 +6,7 @@ from worker.dnet.dnet_worker import DnetWorker
 from view.dnet_scan_dialog import DnetScanDialog
 from view.schema_select_dialog import SchemaSelectDialog
 from log_manager.console_widget import MsgType
+from view.components.dnet.dnet_widget import DnetWidget
 
 class DnetController(QObject):
     # 크로스 스레드(Cross-thread) 통신을 위한 시그널 정의
@@ -50,7 +51,17 @@ class DnetController(QObject):
             schema_dialog = SchemaSelectDialog(self.parent_window)
             if schema_dialog.exec() == QDialog.Accepted:
                 schema_path = schema_dialog.selected_schema
-                print(f"[Controller] 선택된 Schema: {schema_path}")
+                
+                # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
+                while self.parent_window.left_layout.count():
+                    child = self.parent_window.left_layout.takeAt(0)
+                    if child.widget():
+                        child.widget().deleteLater()
+
+                # 새로운 DnetWidget 추가
+                self.dnet_widget = DnetWidget(schema_path)
+                self.parent_window.left_layout.addWidget(self.dnet_widget)
+                self.dnet_widget.update_ui()
             else:
                 # 빈 스키마 파일 만들기
                 pass

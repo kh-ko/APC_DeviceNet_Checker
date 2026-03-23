@@ -57,6 +57,8 @@ class HomeWin(QMainWindow):
         # 좌우 비율 설정 (7:3)
         self.splitter.setStretchFactor(0, 7)
         self.splitter.setStretchFactor(1, 3)
+        # 최초 로딩 시 왼쪽이 비어있으면 0으로 수축하는 것을 방지하기 위해 강제로 사이즈 지정
+        self.splitter.setSizes([1400, 600])
         
         main_layout.addWidget(self.splitter)
 
