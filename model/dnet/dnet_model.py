@@ -1,128 +1,40 @@
 import json
 import logging
-from typing import List, Optional
-
-from model.dnet.pollin_item import PollInItem
-from model.dnet.pollout_item import PollOutItem
-from model.dnet.explicit_item import ExplicitItem
-from model.enum_item import EnumItem
-from model.bitmap_item import BitmapItem
+from typing import List, Literal, Union
+from model.dnet.dnet_item_model import PollInItem, PollOutItem, ExplicitItem
 
 class DnetModel:
+    _instance = None
+    
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(DnetModel, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(self):
-        self.poll_in_items: List[PollInItem] = []
-        self.poll_out_items: List[PollOutItem] = []
-        self.explicit_messages: List[ExplicitItem] = []
+        # 싱글톤이므로 초기화가 여러 번 실행되지 않도록 방어
+        if not hasattr(self, 'initialized'):
+            self.poll_in_items: List[PollInItem] = []
+            self.poll_out_items: List[PollOutItem] = []
+            self.explicit_messages: List[ExplicitItem] = []
+            self.initialized = True
 
     def load_from_json(self, json_path: str):
-        """
-        JSON 파일을 파싱하여 DNet 모델 객체로 로드합니다.
-        JSON에 sequence_num, offset, enabled 정보가 없는 경우 자동으로 할당합니다.
-        """
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 
-                # 1. poll-in 파싱
-                self.poll_in_items = []
-                for i, item in enumerate(data.get('poll-in', [])):
-                    # enum_list 파싱
-                    enum_list = None
-                    if 'enum_list' in item:
-                        enum_list = [EnumItem(text=e.get('text', ''), value=e.get('value', 0)) for e in item['enum_list']]
-                    
-                    # bitmap 파싱 (BitmapItem 리스트로 변환)
-                    bitmap = None
-                    if 'bitmap' in item:
-                        bitmap = [BitmapItem(name=b.get('name', ''), bits=b.get('bits', [])) for b in item['bitmap']]
-                    
-                    # type에 따른 기본 size 계산
-                    type_name = item.get('type', '')
-                    size = 0
-                    if '8' in type_name: size = 1
-                    elif '16' in type_name: size = 2
-                    elif '32' in type_name or 'float' in type_name: size = 4
-                    elif 'bitmap' in type_name: 
-                        # 비트맵의 경우 정의된 항목 수(바이트 수)만큼 크기 할당
-                        size = len(bitmap) if bitmap else 1
-                    
-                    # PollInItem 객체 생성 (기본값 사용)
-                    poll_in = PollInItem(
-                        name=item.get('name', ''),
-                        type=type_name,
-                        ui_type=item.get('ui_type', ''),
-                        size=size,
-                        enum_list=enum_list,
-                        bitmap=bitmap
-                    )
-                    self.poll_in_items.append(poll_in)
-                
-                # 3. poll-out 파싱
-                self.poll_out_items = []
-                for item in data.get('poll-out', []):
-                    # enum_list 파싱
-                    enum_list = None
-                    if 'enum_list' in item:
-                        enum_list = [EnumItem(text=e.get('text', ''), value=e.get('value', 0)) for e in item['enum_list']]
-                    
-                    # type에 따른 기본 size 계산
-                    type_name = item.get('type', '')
-                    size = 0
-                    if '8' in type_name: size = 1
-                    elif '16' in type_name: size = 2
-                    elif '32' in type_name or 'float' in type_name: size = 4
-                    elif 'bitmap' in type_name: size = 1
-                    
-                    poll_out = PollOutItem(
-                        name=item.get('name', ''),
-                        type=type_name,
-                        ui_type=item.get('ui_type', ''),
-                        size=size,
-                        enum_list=enum_list
-                    )
-                    self.poll_out_items.append(poll_out)
-                
-                # 4. explicit 파싱
-                self.explicit_messages = []
-                # JSON 설정 파일에서 "explicit" 혹은 "explicit_messages" 키 모두 대응
-                explicit_data = data.get('explicit', data.get('explicit_messages', []))
-                for item in explicit_data:
-                    # enum_list 파싱
-                    enum_list = None
-                    if 'enum_list' in item:
-                        enum_list = [EnumItem(text=e.get('text', ''), value=e.get('value', 0)) for e in item['enum_list']]
-                    
-                    # bitmap 파싱 
-                    bitmap = None
-                    if 'bitmap' in item:
-                        bitmap = [BitmapItem(name=b.get('name', ''), bits=b.get('bits', [])) for b in item['bitmap']]
-                    
-                    # type에 따른 기본 size 계산
-                    type_name = item.get('type', '')
-                    size = 0
-                    if '8' in type_name: size = 1
-                    elif '16' in type_name: size = 2
-                    elif '32' in type_name or 'float' in type_name: size = 4
-                    elif 'bitmap' in type_name: 
-                        size = len(bitmap) if bitmap else 1
-                        
-                    explicit_item = ExplicitItem(
-                        name=item.get('name', ''),
-                        class_id=item.get('class_id', 0),
-                        instance_id=item.get('instance_id', 0),
-                        attribute_id=item.get('attribute_id', 0),
-                        access_type=item.get('access_type', ''),
-                        type=type_name,
-                        ui_type=item.get('ui_type', ''),
-                        size=size,
-                        enum_list=enum_list,
-                        bitmap=bitmap
-                    )
-                    self.explicit_messages.append(explicit_item)
+            # 2. Pydantic을 통한 파싱 중복 제거 및 간결화
+            self.poll_in_items = self._parse_items(data.get('poll-in', []), PollInItem)
+            self.poll_out_items = self._parse_items(data.get('poll-out', []), PollOutItem)
+            
+            # explicit 혹은 explicit_messages 키 모두 대응
+            explicit_data = data.get('explicit', data.get('explicit_messages', []))
+            self.explicit_messages = self._parse_items(explicit_data, ExplicitItem)
 
-                # 5. 오프셋 계산 및 적용
-                self.calculate_offset()
-                
+            # 오프셋 계산
+            self.calculate_offset()
+
         except FileNotFoundError:
             logging.error(f"설정 파일을 찾을 수 없습니다: {json_path}")
         except json.JSONDecodeError:
@@ -130,26 +42,44 @@ class DnetModel:
         except Exception as e:
             logging.error(f"JSON 로드 중 오류 발생: {e}")
 
+    def _parse_items(self, item_list: list, model_class) -> list:
+        """
+        JSON 리스트를 받아 Pydantic 모델 리스트로 변환합니다.
+        에러 발생 시 프로그램이 죽지 않고 해당 아이템만 에러 처리합니다.
+        """
+        parsed_items = []
+        for item in item_list:
+            if not isinstance(item, dict):
+                continue
+                
+            try:
+                # Pydantic 모델을 통해 자동 매핑 및 타입 검증 (size 계산 포함)
+                parsed_item = model_class(**item)
+                parsed_items.append(parsed_item)
+                
+            except Exception as e:
+                # 5. Pydantic 검증 에러 (타입 불일치 등) 발생 시 에러 핸들링
+                logging.warning(f"아이템 파싱 실패: {item.get('name', 'Unknown')} | 에러 내역: {e}")
+                
+                # 에러가 발생한 항목도 UI에 보여주기 위해 기본값으로 생성하되 에러 플래그 설정
+                err_item = model_class()
+                err_item.name = item.get('name', 'JSON Parsing Error') # 이름만 최소한으로 보존
+                err_item.is_json_parsing_err = True
+                err_item.size = 0
+                parsed_items.append(err_item)
+                
+        return parsed_items
+
     def calculate_offset(self):
-        """
-        활성(enabled) 상태인 항목들에 대해서만 오프셋을 계산하여 할당합니다.
-        비활성 항목은 오프셋을 0으로 설정합니다.
-        """
-        # poll_in 오프셋 계산
+        # 오프셋 계산 로직은 기존과 동일하게 유지
         current_offset = 0
         for item in self.poll_in_items:
+            item.offset = current_offset if item.enabled else 0
             if item.enabled:
-                item.offset = current_offset
                 current_offset += item.size
-            else:
-                item.offset = 0
 
-        # poll_out 오프셋 계산
         current_offset = 0
         for item in self.poll_out_items:
+            item.offset = current_offset if item.enabled else 0
             if item.enabled:
-                item.offset = current_offset
                 current_offset += item.size
-            else:
-                item.offset = 0
-

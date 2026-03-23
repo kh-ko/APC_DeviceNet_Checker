@@ -1,6 +1,6 @@
 {
     "poll-out":[
-        {"name": "", "type": "", "ui_type": "enum", "enum_list":
+        {"name": "", "type": "uint8", "ui_type": "enum", "enum_list":
             [
                 { "text": "Manufacturer specific alarm present"  , "value": 192 },
                 { "text": "Manufacturer specific warning present", "value": 132 },
