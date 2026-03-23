@@ -36,7 +36,7 @@ class DnetModel:
             self.calculate_offset()
 
         except FileNotFoundError:
-            logging.error(f"설정 파일을 찾을 수 없습니다: {json_path}")
+            logging.error(f"스키마 파일을 찾을 수 없습니다: {json_path}")
         except json.JSONDecodeError:
             logging.error(f"JSON 형식이 유효하지 않습니다: {json_path}")
         except Exception as e:
