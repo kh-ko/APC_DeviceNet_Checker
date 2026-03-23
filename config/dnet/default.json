@@ -1,5 +1,15 @@
 {
-    "poll-out":[],
+    "poll-out":[
+        {"name": "", "type": "", "ui_type": "enum", "enum_list":
+            [
+                { "text": "Manufacturer specific alarm present"  , "value": 192 },
+                { "text": "Manufacturer specific warning present", "value": 132 },
+                { "text": "No warning, no error present"         , "value": 128 }
+            ] 
+        },
+        {"name": "PRESSURE-INT(2)"              , "type": "int16"   , "ui_type": "number"},
+        {"name": "PRESSURE-FLOAT(4)"            , "type": "float"   , "ui_type": "real"  }
+    ],
     "poll-in":[
         {"name": "EXCEPTION STATUS(1)"          , "type": "uint8"   , "ui_type": "enum", "enum_list":
             [
@@ -30,6 +40,24 @@
             ]
         }
     ],
-    "explicit_messages": [
+    "explicit": [
+        {
+            "name": "Reset",
+            "class_id": 1,
+            "instance_id": 1,
+            "attribute_id": 0,
+            "access_type": "Exe",
+            "type":"none",
+            "ui_type": "action"
+        },
+        {
+            "name": "Pressure setpoint",
+            "class_id": 51,
+            "instance_id": 1,
+            "attribute_id": 6,
+            "access_type": "RW",
+            "type":"float",
+            "ui_type": "real"
+        }
     ]
 }
