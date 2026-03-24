@@ -1,7 +1,9 @@
 import json
+import os
 import logging
 from typing import List, Literal, Union
 from model.dnet.dnet_item_model import PollInItem, PollOutItem, ExplicitItem
+from utils.file_path import get_app_path
 
 class DnetModel:
     _instance = None
@@ -18,12 +20,15 @@ class DnetModel:
             self.poll_out_items: List[PollOutItem] = []
             self.explicit_messages: List[ExplicitItem] = []
             self.initialized = True
+            self.schema_path = ""
 
     def load_from_json(self, json_path: str):
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 
+            self.schema_path = json_path
+
             # 2. Pydantic을 통한 파싱 중복 제거 및 간결화
             self.poll_in_items = self._parse_items(data.get('poll-in', []), PollInItem)
             self.poll_out_items = self._parse_items(data.get('poll-out', []), PollOutItem)
@@ -41,6 +46,34 @@ class DnetModel:
             logging.error(f"JSON 형식이 유효하지 않습니다: {json_path}")
         except Exception as e:
             logging.error(f"JSON 로드 중 오류 발생: {e}")
+
+    def save_to_json(self):
+        try:
+            with open(self.schema_path, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "poll-in": [item.dict() for item in self.poll_in_items],
+                    "poll-out": [item.dict() for item in self.poll_out_items],
+                    "explicit": [item.dict() for item in self.explicit_messages]
+                }, f, indent=4)
+        except Exception as e:
+            logging.error(f"JSON 저장 중 오류 발생: {e}")
+
+    def save_as_to_json(self, new_schema_name: str):
+        """
+        새로운 스키마 파일로 저장
+        """
+        self.schema_path = os.path.join(get_app_path(), "schema", "dnet", new_schema_name + ".json")
+        try:
+            with open(self.schema_path, 'w', encoding='utf-8') as f:
+                json.dump({
+                    "poll-in": [item.dict() for item in self.poll_in_items],
+                    "poll-out": [item.dict() for item in self.poll_out_items],
+                    "explicit": [item.dict() for item in self.explicit_messages]
+                }, f, indent=4)
+        except Exception as e:
+            logging.error(f"JSON 저장 중 오류 발생: {e}")
+
+        return self.schema_path
 
     def _parse_items(self, item_list: list, model_class) -> list:
         """

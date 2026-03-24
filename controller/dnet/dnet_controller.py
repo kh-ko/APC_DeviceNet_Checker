@@ -1,12 +1,16 @@
 import logging
+import json
+import os
+from utils.file_path import get_app_path
 from PySide6.QtCore import QObject, QThread, Signal, Qt
-from PySide6.QtWidgets import QDialog
+from PySide6.QtWidgets import QDialog, QInputDialog, QMessageBox
 
 from worker.dnet.dnet_worker import DnetWorker
 from view.dnet_scan_dialog import DnetScanDialog
 from view.schema_select_dialog import SchemaSelectDialog
 from log_manager.console_widget import MsgType
 from view.components.dnet.dnet_widget import DnetWidget
+from model.dnet.dnet_model import DnetModel
 
 class DnetController(QObject):
     # 크로스 스레드(Cross-thread) 통신을 위한 시그널 정의
@@ -47,24 +51,7 @@ class DnetController(QObject):
         # 2. dnet_scan_dialog 띄우기 (스캔 + Slave 선택 화면)
         scan_dialog = DnetScanDialog(self.worker, self.parent_window)
         if scan_dialog.exec() == QDialog.Accepted:
-
-            schema_dialog = SchemaSelectDialog(self.parent_window)
-            if schema_dialog.exec() == QDialog.Accepted:
-                schema_path = schema_dialog.selected_schema
-                
-                # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
-                while self.parent_window.left_layout.count():
-                    child = self.parent_window.left_layout.takeAt(0)
-                    if child.widget():
-                        child.widget().deleteLater()
-
-                # 새로운 DnetWidget 추가
-                self.dnet_widget = DnetWidget(schema_path)
-                self.parent_window.left_layout.addWidget(self.dnet_widget)
-                self.dnet_widget.update_ui()
-            else:
-                # 빈 스키마 파일 만들기
-                pass
+            self.open_select_schema()
 
             mac_id = scan_dialog.selected_mac_id
             print(f"[Controller] 선택된 MAC ID: {mac_id}")
@@ -110,3 +97,105 @@ class DnetController(QObject):
         self.worker_thread.wait()
 
         print("DnetController shutdown")
+
+    def create_new_schema(self):
+        # 새로운 스키마 이름 입력 받을 QDialog 띄우기
+        schema_name = QInputDialog.getText(self.parent_window, "새 스키마", "스키마 이름을 입력하세요:")
+        if schema_name[1]:
+            schema_name = schema_name[0]
+        else:
+            return False
+
+        base_path = get_app_path()
+        schema_path = os.path.join(base_path, "schema", "dnet", schema_name + ".json")
+
+        # 스키마 파일 생성
+        with open(schema_path, "w") as f:
+            json.dump({
+                "poll-out":[],
+                "poll-in":[],
+                "explicit": []
+            }, f)
+
+        # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
+        while self.parent_window.left_layout.count():
+            child = self.parent_window.left_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # 새로운 DnetWidget 추가
+        self.dnet_widget = DnetWidget(schema_path)
+        self.parent_window.left_layout.addWidget(self.dnet_widget)
+        self.dnet_widget.update_ui()
+        return True
+
+    def open_select_schema(self):
+        schema_dialog = SchemaSelectDialog(self.parent_window)
+        if schema_dialog.exec() == QDialog.Accepted:
+            schema_path = schema_dialog.selected_schema
+            
+            # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
+            while self.parent_window.left_layout.count():
+                child = self.parent_window.left_layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+
+            # 새로운 DnetWidget 추가
+            self.dnet_widget = DnetWidget(schema_path)
+            self.parent_window.left_layout.addWidget(self.dnet_widget)
+            self.dnet_widget.update_ui()
+        else:
+            # 빈 스키마 파일 만들기
+            return False
+        return True
+
+    def save_schema(self):
+        dnetModel = DnetModel()
+        dnetModel.save_to_json()
+
+    def save_as_schema(self):
+        schema_name = QInputDialog.getText(self.parent_window, "새 스키마", "스키마 이름을 입력하세요:")
+        if schema_name[1]:
+            schema_name = schema_name[0]
+        else:
+            return
+
+        dnetModel = DnetModel()
+        schema_path = dnetModel.save_as_to_json(schema_name)
+            
+        # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
+        while self.parent_window.left_layout.count():
+            child = self.parent_window.left_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # 새로운 DnetWidget 추가
+        self.dnet_widget = DnetWidget(schema_path)
+        self.parent_window.left_layout.addWidget(self.dnet_widget)
+        self.dnet_widget.update_ui()
+
+    def remove_schema(self):
+        dnetModel = DnetModel()
+        # json 파일이 하나만 있으면 삭제 할수 없다.
+        remove_schema_path =  dnetModel.schema_path
+
+        if remove_schema_path == "":
+            QMessageBox.warning(self.parent_window, "경고", "스키마가 없습니다.")
+            return
+
+        schema_dir = os.path.join(get_app_path(), "schema", "dnet")
+        schema_files = os.listdir(schema_dir)
+        if len(schema_files) <= 1:
+            if self.create_new_schema() == True:
+                os.remove(remove_schema_path)
+                return
+        else:
+            if self.open_select_schema() == True:
+                os.remove(remove_schema_path)
+                return
+
+        
+            
+
+        
+        

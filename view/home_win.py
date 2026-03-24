@@ -21,6 +21,7 @@ class HomeWin(QMainWindow):
 
         self.setup_body()
 
+        self.curr_network = "None"
         # DnetController 생성
         self.dnet_controller = DnetController(self)
         # 워커 로그를 콘솔 위젯에 연결
@@ -72,6 +73,7 @@ class HomeWin(QMainWindow):
         action_load = QAction("불러오기", self)
         action_save = QAction("저장하기", self)
         action_save_as = QAction("다른 이름으로 저장하기", self)
+        action_remove = QAction("삭제하기", self)
         
         # 3. 툴바에 액션 추가
         toolbar.addAction(action_connect)
@@ -80,6 +82,7 @@ class HomeWin(QMainWindow):
         toolbar.addAction(action_load)
         toolbar.addAction(action_save)
         toolbar.addAction(action_save_as)
+        toolbar.addAction(action_remove)
 
         accent_color = self.palette().color(QPalette.ColorRole.Highlight).name()
 
@@ -107,10 +110,11 @@ class HomeWin(QMainWindow):
         # 4. 버튼 클릭 이벤트(Signal) 연결
         # 버튼을 눌렀을 때 실행될 함수(Slot)를 연결합니다.
         action_connect.triggered.connect(self.on_connect_clicked)
-        #action_new.triggered.connect(self.on_new_clicked)
+        action_new.triggered.connect(self.on_new_clicked)
         action_load.triggered.connect(self.on_load_clicked)
         action_save.triggered.connect(self.on_save_clicked)
         action_save_as.triggered.connect(self.on_save_as_clicked)
+        action_remove.triggered.connect(self.on_remove_clicked)
 
     # --- 아래는 버튼 클릭 시 실행될 임시 함수(Slot)들입니다 ---
     def on_connect_clicked(self):
@@ -122,19 +126,29 @@ class HomeWin(QMainWindow):
             # 다이얼로그에서 데이터 가져오기
             conn_info = dialog.get_connection_info()
             
+            self.curr_network = conn_info["Network"]
+
             if conn_info["Network"] == "Device Net":
                 self.dnet_controller.connect_module(conn_info)
             else:
                 self.dnet_controller.disconnect_module()
 
     def on_new_clicked(self):
-        print("새 프로젝트를 만듭니다.")
+        if self.curr_network == "Device Net":
+            self.dnet_controller.create_new_schema()
 
     def on_load_clicked(self):
-        print("파일을 불러옵니다.")
+        if self.curr_network == "Device Net":
+            self.dnet_controller.open_select_schema()
 
     def on_save_clicked(self):
-        print("파일을 저장합니다.")
+        if self.curr_network == "Device Net":
+            self.dnet_controller.save_schema()
 
     def on_save_as_clicked(self):
-        print("다른 이름으로 파일을 저장합니다.")
+        if self.curr_network == "Device Net":
+            self.dnet_controller.save_as_schema()
+
+    def on_remove_clicked(self):
+        if self.curr_network == "Device Net":
+            self.dnet_controller.remove_schema()
