@@ -269,6 +269,8 @@ class DnetWorker(QObject):
         )
         if res == I7565DNM_NO_ERROR and io_len.value > 0:
             self.poll_rx_signal.emit(self.target_mac_id, 1, bytes(io_data_buffer[:io_len.value]))
+        else:
+            self.log_msg_signal.emit("ERROR", f"[Poll In] 데이터 읽기 실패 (코드: {res})")
 
     def _check_explicit_response(self):
         if self.state not in (WorkerState.ONLINE, WorkerState.POLLING) or not self.dll:
