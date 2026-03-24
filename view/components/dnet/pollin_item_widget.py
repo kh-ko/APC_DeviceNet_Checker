@@ -70,12 +70,13 @@ class PollInItemWidget(QWidget):
         # 7. 읽어온 값 표시 라벨
         self.lbl_read_value = QLabel("Value: -")
         self.lbl_read_value.setMinimumWidth(100)
+        self.lbl_read_value.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         # 값이 눈에 잘 띄도록 스타일 적용
         self.lbl_read_value.setStyleSheet("background-color: #f0f0f0; border: 1px solid #ccc; padding: 2px;")
         self.main_layout.addWidget(self.lbl_read_value)
 
         # UI 요소들이 왼쪽으로 정렬되도록 빈 공간(Stretch) 추가
-        self.main_layout.addStretch(1)
+        #self.main_layout.addStretch(1)
 
         # 8. 컨트롤 버튼들 (Up, Down, Edit, Delete)
         self.btn_up = QPushButton("▲")
