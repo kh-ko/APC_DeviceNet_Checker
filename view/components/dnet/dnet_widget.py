@@ -97,7 +97,7 @@ class DnetWidget(QWidget):
         layout.setSpacing(2) # 위젯 간 간격 좁게
         layout.setAlignment(Qt.AlignTop) # 위에서부터 정렬
         
-        scroll_area.setWidget(container)
+        scroll_area.setWidget(container) 
         return scroll_area, layout
 
     def update_ui(self):
