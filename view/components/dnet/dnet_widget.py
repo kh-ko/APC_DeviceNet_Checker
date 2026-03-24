@@ -1,6 +1,10 @@
+from model.dnet.dnet_item_model import PollInItem
+from model.dnet.dnet_item_model import EnumItem
+from model.dnet.dnet_item_model import BitmapItem
+from view.components.dnet.pollin_item_edit_dialog import PollInItemEditDialog
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTabWidget, QScrollArea, QFormLayout, 
-    QLabel, QComboBox, QSpinBox, QDoubleSpinBox, QPushButton, QHBoxLayout
+    QLabel, QComboBox, QSpinBox, QDoubleSpinBox, QPushButton, QHBoxLayout, QDialog
 )
 from PySide6.QtCore import Qt
 
@@ -87,24 +91,85 @@ class DnetWidget(QWidget):
                 child.widget().deleteLater()
 
     def on_pollin_add(self):
-        print("Poll-In 아이템 추가 다이얼로그 호출")
-        # TODO: 아이템 추가 다이얼로그(QDialog) 생성 및 데이터 모델에 추가 로직 구현
-        # 1. dialog = AddItemDialog(...)
-        # 2. if dialog.exec() == QDialog.Accepted:
-        # 3.     self.dnet_model.poll_in_items.append(new_item)
-        # 4.     self.update_ui() # 리스트 다시 그리기
+        new_item = PollInItem()
+        new_item.name = "New Item"
+        new_item.type = "uint8"
+        new_item.ui_type = "number"
+        new_item.validate_and_calculate_size()
+        self.dnet_model.poll_in_items.append(new_item)
+        self.dnet_model.calculate_offset()
+        self.update_ui()
 
     def on_pollin_move_up(self, widget: PollInItemWidget):
-        pass
+        try:
+            current_index = self.dnet_model.poll_in_items.index(widget.item)
+        except ValueError:
+            return
+            
+        if current_index <= 0:
+            return
+            
+        items = self.dnet_model.poll_in_items
+        items[current_index - 1], items[current_index] = items[current_index], items[current_index - 1]
+        
+        self.dnet_model.calculate_offset()
+        self.update_ui()
 
     def on_pollin_move_down(self, widget: PollInItemWidget):
-        pass
+        try:
+            current_index = self.dnet_model.poll_in_items.index(widget.item)
+        except ValueError:
+            return
+            
+        if current_index >= len(self.dnet_model.poll_in_items) - 1:
+            return
+            
+        items = self.dnet_model.poll_in_items
+        items[current_index + 1], items[current_index] = items[current_index], items[current_index + 1]
+        
+        self.dnet_model.calculate_offset()
+        self.update_ui()
 
     def on_pollin_delete(self, widget: PollInItemWidget):
-        pass
+        try:
+            current_index = self.dnet_model.poll_in_items.index(widget.item)
+        except ValueError:
+            return
+            
+        self.dnet_model.poll_in_items.pop(current_index)
+        self.dnet_model.calculate_offset()
+        self.update_ui()
 
     def on_pollin_edit(self, widget: PollInItemWidget):
-        pass
+        dialog = PollInItemEditDialog(widget.item, self)
+        
+        if dialog.exec() == QDialog.Accepted:
+            new_data = dialog.get_updated_data()
+            
+            # 1. 텍스트/콤보박스로 입력된 기본 속성 변경
+            widget.item.name = new_data.get("name", "")
+            widget.item.type = new_data.get("type", "")
+            widget.item.ui_type = new_data.get("ui_type", "")
+            
+            # 2. Table 기반의 리스트 속성 업데이트
+            if "enum_list" in new_data:
+                widget.item.enum_list = [EnumItem(**e) for e in new_data["enum_list"]]
+            else:
+                widget.item.enum_list = None
+                
+            if "bitmap" in new_data:
+                widget.item.bitmap = [BitmapItem(**b) for b in new_data["bitmap"]]
+            else:
+                widget.item.bitmap = None
+            
+            # 3. size, json_parsing_err 등 데이터 모델 단에서 재계산 (Pydantic validator 직접 트리거)
+            widget.item.validate_and_calculate_size()
+            
+            # 4. Offset 재계산 (전체 리스트)
+            self.dnet_model.calculate_offset()
+            
+            # 5. UI 새로 그리기
+            self.update_ui()
 
     def on_pollin_enable_changed(self, widget: PollInItemWidget, is_enabled: bool):
-        pass              
+        self.dnet_model.calculate_offset()              

@@ -27,9 +27,9 @@ class BaseDnetItem(BaseModel):
     @model_validator(mode='after')
     def validate_and_calculate_size(self) -> 'BaseDnetItem':
         # 이미 파싱 에러 상태로 마킹된 경우 사이즈를 0으로 고정
-        if self.is_json_parsing_err:
-            self.size = 0
-            return self
+        #if self.is_json_parsing_err:
+        #    self.size = 0
+        #    return self
 
         type_name = self.type.lower().strip()
 
@@ -53,10 +53,12 @@ class BaseDnetItem(BaseModel):
         # 3. Bitmap 크기 계산 방식 유지
         if type_name == 'bitmap':
             self.size = len(self.bitmap) if self.bitmap else 1
+            self.is_json_parsing_err = False
             
         # 1. 매핑 테이블에 존재하는 타입일 경우
         elif type_name in size_map:
             self.size = size_map[type_name]
+            self.is_json_parsing_err = False
             
         # 1 & 5. 매핑 테이블에 없는 알 수 없는 타입인 경우 에러 처리
         else:

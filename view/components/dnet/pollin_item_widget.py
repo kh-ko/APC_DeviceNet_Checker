@@ -96,6 +96,8 @@ class PollInItemWidget(QWidget):
         self.table_widget.setVisible(False) # Bitmap 타입이 아니면 숨김
         self.table_widget.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers) # 읽기 전용
         self.table_widget.setSelectionMode(QTableWidget.SelectionMode.NoSelection) # 선택 불가
+        self.table_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         table_layout = QHBoxLayout()
         table_layout.setContentsMargins(80, 0, 80, 0) # 좌, 상, 우, 하
         table_layout.addWidget(self.table_widget)
