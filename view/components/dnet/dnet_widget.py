@@ -1,7 +1,8 @@
-from model.dnet.dnet_item_model import PollInItem
+from model.dnet.dnet_item_model import PollInItem, PollOutItem
 from model.dnet.dnet_item_model import EnumItem
 from model.dnet.dnet_item_model import BitmapItem
 from view.components.dnet.pollin_item_edit_dialog import PollInItemEditDialog
+from view.components.dnet.pollout_item_edit_dialog import PollOutItemEditDialog
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTabWidget, QScrollArea, QFormLayout, 
     QLabel, QComboBox, QSpinBox, QDoubleSpinBox, QPushButton, QHBoxLayout, QDialog
@@ -11,6 +12,7 @@ from PySide6.QtCore import Qt
 from model.dnet.dnet_model import DnetModel
 from model.dnet.dnet_item_model import BaseDnetItem
 from view.components.dnet.pollin_item_widget import PollInItemWidget
+from view.components.dnet.pollout_item_widget import PollOutItemWidget
 
 
 class DnetWidget(QWidget):
@@ -82,6 +84,24 @@ class DnetWidget(QWidget):
         btn_add_pollin.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
         btn_add_pollin.clicked.connect(self.on_pollin_add)
         self.poll_in_layout.addWidget(btn_add_pollin)
+
+        # 2. Poll-Out 위젯 렌더링 및 시그널 연결
+        for item in self.dnet_model.poll_out_items:
+            widget = PollOutItemWidget(item)
+            
+            # 시그널 연결
+            widget.sig_move_up.connect(self.on_pollout_move_up)
+            widget.sig_move_down.connect(self.on_pollout_move_down)
+            widget.sig_delete.connect(self.on_pollout_delete)
+            widget.sig_edit.connect(self.on_pollout_edit)
+            widget.sig_enable_changed.connect(self.on_pollout_enable_changed)
+            
+            self.poll_out_layout.addWidget(widget)
+
+        btn_add_pollout = QPushButton("+ Poll-Out 아이템 추가")
+        btn_add_pollout.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
+        btn_add_pollout.clicked.connect(self.on_pollout_add)
+        self.poll_out_layout.addWidget(btn_add_pollout)        
 
     def _clear_layout(self, layout: QFormLayout):
         """레이아웃 내부의 모든 아이템을 제거합니다."""
@@ -172,4 +192,86 @@ class DnetWidget(QWidget):
             self.update_ui()
 
     def on_pollin_enable_changed(self, widget: PollInItemWidget, is_enabled: bool):
-        self.dnet_model.calculate_offset()              
+        self.dnet_model.calculate_offset()     
+        self.update_ui() 
+
+    
+    def on_pollout_add(self):
+        new_item = PollOutItem()
+        new_item.name = "New Item"
+        new_item.type = "uint8"
+        new_item.ui_type = "number"
+        new_item.validate_and_calculate_size()
+        self.dnet_model.poll_out_items.append(new_item)
+        self.dnet_model.calculate_offset()
+        self.update_ui()
+
+    def on_pollout_move_up(self, widget: PollOutItemWidget):
+        try:
+            current_index = self.dnet_model.poll_out_items.index(widget.item)
+        except ValueError:
+            return
+            
+        if current_index <= 0:
+            return
+            
+        items = self.dnet_model.poll_out_items
+        items[current_index - 1], items[current_index] = items[current_index], items[current_index - 1]
+        
+        self.dnet_model.calculate_offset()
+        self.update_ui()
+
+    def on_pollout_move_down(self, widget: PollOutItemWidget):
+        try:
+            current_index = self.dnet_model.poll_out_items.index(widget.item)
+        except ValueError:
+            return
+            
+        if current_index >= len(self.dnet_model.poll_out_items) - 1:
+            return
+            
+        items = self.dnet_model.poll_out_items
+        items[current_index + 1], items[current_index] = items[current_index], items[current_index + 1]
+        
+        self.dnet_model.calculate_offset()
+        self.update_ui()
+
+    def on_pollout_delete(self, widget: PollOutItemWidget):
+        try:
+            current_index = self.dnet_model.poll_out_items.index(widget.item)
+        except ValueError:
+            return
+            
+        self.dnet_model.poll_out_items.pop(current_index)
+        self.dnet_model.calculate_offset()
+        self.update_ui()
+
+    def on_pollout_edit(self, widget: PollOutItemWidget):
+        dialog = PollOutItemEditDialog(widget.item, self)
+        
+        if dialog.exec() == QDialog.Accepted:
+            new_data = dialog.get_updated_data()
+            
+            # 1. 텍스트/콤보박스로 입력된 기본 속성 변경
+            widget.item.name = new_data.get("name", "")
+            widget.item.type = new_data.get("type", "")
+            widget.item.ui_type = new_data.get("ui_type", "")
+            
+            # 2. Table 기반의 리스트 속성 업데이트
+            if "enum_list" in new_data:
+                widget.item.enum_list = [EnumItem(**e) for e in new_data["enum_list"]]
+            else:
+                widget.item.enum_list = None
+            
+            # 3. size, json_parsing_err 등 데이터 모델 단에서 재계산 (Pydantic validator 직접 트리거)
+            widget.item.validate_and_calculate_size()
+            
+            # 4. Offset 재계산 (전체 리스트)
+            self.dnet_model.calculate_offset()
+            
+            # 5. UI 새로 그리기
+            self.update_ui()
+
+    def on_pollout_enable_changed(self, widget: PollOutItemWidget, is_enabled: bool):
+        self.dnet_model.calculate_offset()       
+        self.update_ui()     

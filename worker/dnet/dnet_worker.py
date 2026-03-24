@@ -128,9 +128,14 @@ class DnetWorker(QObject):
 
     @Slot(int)
     def connect_module(self, port: int):
-        if self.state != WorkerState.DISCONNECTED or not self.dll:
-            self.log_msg_signal.emit("WARNING", "현재 상태에서는 마스터를 연결할 수 없습니다.")
+        if not self.dll:
+            self.log_msg_signal.emit("WARNING", "DLL이 로드되지 않아 마스터를 연결할 수 없습니다.")
             return
+            
+        # 기존에 연결된 상태라면 기존 연결을 먼저 완전히 해제합니다.
+        if self.state != WorkerState.DISCONNECTED:
+            self.log_msg_signal.emit("INFO", f"기존 연결(상태: {self.state.name})을 종료하고 재연결을 시도합니다.")
+            self.disconnect_module()
 
         res = self.dll.I7565DNM_ActiveModule(port)
         if res == I7565DNM_NO_ERROR:

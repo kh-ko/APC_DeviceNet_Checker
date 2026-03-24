@@ -92,6 +92,9 @@ class DnetController(QObject):
 
         self.parent_window.console.add_message(consoleMsgType, message)
 
+    def disconnect_module(self):
+        self.cmd_disconnect_module.emit()
+        
     def shutdown(self):
         """
         프로그램 종료 시 호출하여 모듈과 스레드를 안전하게 닫습니다.

@@ -260,8 +260,7 @@ class PollInItemWidget(QWidget):
         """아이템이 Disable 되면 위젯을 반투명하게 보이도록 처리합니다."""
         widgets_to_toggle = [
             self.lbl_name, self.lbl_offset, self.lbl_size, 
-            self.lbl_json_err, self.lbl_data_err, self.lbl_read_value,
-            self.btn_edit
+            self.lbl_json_err, self.lbl_data_err, self.lbl_read_value
         ]
         for w in widgets_to_toggle:
             w.setEnabled(is_enabled)

@@ -124,6 +124,8 @@ class HomeWin(QMainWindow):
             
             if conn_info["Network"] == "Device Net":
                 self.dnet_controller.connect_module(conn_info)
+            else:
+                self.dnet_controller.disconnect_module()
 
     def on_new_clicked(self):
         print("새 프로젝트를 만듭니다.")
