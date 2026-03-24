@@ -1,5 +1,5 @@
 import logging
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, QThread, Signal, Qt
 from PySide6.QtWidgets import QDialog
 
 from worker.dnet.dnet_worker import DnetWorker
@@ -29,7 +29,7 @@ class DnetController(QObject):
         
         # 워커와의 시그널 연동 (스레드 충돌 방지)
         self.cmd_connect_module.connect(self.worker.connect_module)
-        self.cmd_disconnect_module.connect(self.worker.disconnect_module)
+        self.cmd_disconnect_module.connect(self.worker.disconnect_module, Qt.BlockingQueuedConnection)
         self.cmd_connect_slave.connect(self.worker.connect_slave)
         self.worker.log_msg_signal.connect(self.on_dnet_log)
 
@@ -96,6 +96,14 @@ class DnetController(QObject):
         """
         프로그램 종료 시 호출하여 모듈과 스레드를 안전하게 닫습니다.
         """
+        # 1. 워커 내부의 통신 해제 및 타이머 정지 (BlockingQueuedConnection으로 인해 대기함)
         self.cmd_disconnect_module.emit()
+        
+        # 2. 워커 스레드 이벤트 큐에 '워커 객체 삭제' 명령(Event)을 맨 앞에 넣음
+        self.worker.deleteLater()
+        
+        # 3. 워커 스레드 이벤트 큐에 '루프 종료' 명령을 그 뒤에 넣고 대기
         self.worker_thread.quit()
         self.worker_thread.wait()
+
+        print("DnetController shutdown")

@@ -3,7 +3,7 @@ import ctypes
 from enum import Enum, auto
 from PySide6.QtCore import QObject, Signal, Slot, QTimer
 
-from uitls.file_path import get_app_path
+from utils.file_path import get_app_path
 
 # I7565DNM API 에러 코드
 I7565DNM_NO_ERROR = 0

@@ -5,7 +5,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QListWidget,
                                QPushButton, QHBoxLayout, QListWidgetItem, QMessageBox)
 from PySide6.QtCore import Qt, Signal
 
-from uitls.file_path import get_app_path
+from utils.file_path import get_app_path
 
 class SchemaSelectDialog(QDialog):
     def __init__(self, parent=None):

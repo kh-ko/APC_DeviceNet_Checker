@@ -1,3 +1,4 @@
+import struct
 from PySide6.QtWidgets import (
     QWidget, QHBoxLayout, QCheckBox, QLabel, QPushButton, QFrame, QTableWidget, QHeaderView, QVBoxLayout, QTableWidgetItem, QSizePolicy
 )
