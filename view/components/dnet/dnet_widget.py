@@ -74,12 +74,25 @@ class DnetWidget(QWidget):
             
             self.poll_in_layout.addWidget(widget)
 
+        btn_add_pollin = QPushButton("+ Poll-In 아이템 추가")
+        btn_add_pollin.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
+        btn_add_pollin.clicked.connect(self.on_pollin_add)
+        self.poll_in_layout.addWidget(btn_add_pollin)
+
     def _clear_layout(self, layout: QFormLayout):
         """레이아웃 내부의 모든 아이템을 제거합니다."""
         while layout.count():
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+
+    def on_pollin_add(self):
+        print("Poll-In 아이템 추가 다이얼로그 호출")
+        # TODO: 아이템 추가 다이얼로그(QDialog) 생성 및 데이터 모델에 추가 로직 구현
+        # 1. dialog = AddItemDialog(...)
+        # 2. if dialog.exec() == QDialog.Accepted:
+        # 3.     self.dnet_model.poll_in_items.append(new_item)
+        # 4.     self.update_ui() # 리스트 다시 그리기
 
     def on_pollin_move_up(self, widget: PollInItemWidget):
         pass

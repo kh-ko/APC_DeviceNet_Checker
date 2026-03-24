@@ -1,6 +1,9 @@
+import os
 import ctypes
 from enum import Enum, auto
 from PySide6.QtCore import QObject, Signal, Slot, QTimer
+
+from uitls.file_path import get_app_path
 
 # I7565DNM API 에러 코드
 I7565DNM_NO_ERROR = 0
@@ -28,9 +31,14 @@ class DnetWorker(QObject):
     explicit_rx_signal = Signal(int, bytes)         # (mac_id, raw_bytes)
     device_search_complete_signal = Signal(list)    # found_devices 리스트
 
-    def __init__(self, dll_path: str = "./x64/I7565DNM.dll"):
+    def __init__(self, dll_path: str = None):
         super().__init__()
-        self.dll_path = dll_path
+        if dll_path is None:
+            base_path = get_app_path()
+            self.dll_path = os.path.join(base_path, "x64", "I7565DNM.dll")
+        else:
+            self.dll_path = dll_path
+            
         self.dll = None
         self.current_port = 1
         

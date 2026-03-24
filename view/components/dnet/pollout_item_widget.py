@@ -96,7 +96,7 @@ class PollOutItemWidget(QWidget):
         self.lbl_name.setText(self.item.name if self.item.name else "Unknown")
         self.lbl_offset.setText(f"Off: {self.item.offset}")
         self.lbl_size.setText(f"Sz: {self.item.size}")
-        self.lbl_read_value.setText(f"Val: {self.item.data}")
+        self.lbl_read_value.setText(f"Val:")
 
         # JSON 파싱 에러 인디케이터 (에러면 빨간색, 정상이면 회색)
         if self.item.is_json_parsing_err:
@@ -116,7 +116,6 @@ class PollOutItemWidget(QWidget):
     def update_read_data(self, new_data: str, is_error: bool = False):
         """통신 모듈로부터 새로운 데이터를 받았을 때 라벨만 업데이트하는 함수"""
         self.item.data = new_data
-        self.item.is_data_err = is_error
         
         self.lbl_read_value.setText(f"Val: {new_data}")
         if is_error:

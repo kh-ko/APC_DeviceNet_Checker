@@ -1,9 +1,11 @@
-# schema 파일 선택하는 다이얼로그
+import os
+import sys
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QListWidget, 
                                QPushButton, QHBoxLayout, QListWidgetItem, QMessageBox)
 from PySide6.QtCore import Qt, Signal
-import os
+
+from uitls.file_path import get_app_path
 
 class SchemaSelectDialog(QDialog):
     def __init__(self, parent=None):
@@ -40,16 +42,19 @@ class SchemaSelectDialog(QDialog):
         self.load_schemas()
         
     def load_schemas(self):
+        base_path = get_app_path()
+        schema_dir = os.path.join(base_path, "schema", "dnet")
         # 실행 위치에서 schema/dnet 폴더의 파일 목록을 가져와서 리스트에 추가
-        schema_dir = "schema/dnet"
         if os.path.exists(schema_dir):
             for filename in os.listdir(schema_dir):
                 if filename.endswith(".json"):
                     item = QListWidgetItem(filename)
-                    # 윈도우 환경(os.path.join)에서 발생하는 역슬래시(\)를 일관성 있게 슬래시(/)로 치환합니다.
+                    # 윈도우 환경 역슬래시 치환
                     schema_path = os.path.join(schema_dir, filename).replace("\\", "/")
                     item.setData(Qt.UserRole, schema_path)
                     self.schema_list.addItem(item)
+        else:
+            print(f"[Warning] 스키마 폴더를 찾을 수 없습니다: {schema_dir}")
     
     def on_selection_changed(self):
         if self.schema_list.selectedItems():

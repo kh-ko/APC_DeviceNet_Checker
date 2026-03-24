@@ -23,7 +23,6 @@ class BaseDnetItem(BaseModel):
     size: int = 0
     offset: int = 0
     is_json_parsing_err: bool = False
-    is_data_err: bool = False
 
     @model_validator(mode='after')
     def validate_and_calculate_size(self) -> 'BaseDnetItem':
