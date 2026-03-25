@@ -13,7 +13,7 @@ class DnetScanDialog(QDialog):
         self.resize(400, 300)
         
         self.worker: DnetWorker = worker
-        self.selected_mac_id = None
+        self.selected_device_info = None
         
         # UI 구성
         layout = QVBoxLayout(self)
@@ -62,14 +62,16 @@ class DnetScanDialog(QDialog):
         
     def on_scan_completed(self, found_devices):
         self.rescan_btn.setEnabled(True)
+
+        poll_devices = [dev for dev in found_devices if dev["type"] == 1]
         
-        if not found_devices:
+        if not poll_devices:
             self.status_label.setText("검색된 장비가 없습니다. 배선 및 전원을 확인해 주세요.")
             return
             
-        self.status_label.setText(f"총 {len(found_devices)}개의 장비가 검색되었습니다. 연결할 장비를 선택하세요.")
+        self.status_label.setText(f"총 {len(poll_devices)}개의 장비가 검색되었습니다. 연결할 장비를 선택하세요.")
         
-        for dev in found_devices:
+        for dev in poll_devices:
             mac_id = dev["mac_id"]
             dev_type = dev["type"]
             in_len = dev["in_len"]
@@ -78,7 +80,7 @@ class DnetScanDialog(QDialog):
             # 리스트 아이템 생성 및 MAC ID 데이터 심기
             list_text = f"MAC ID: {mac_id} (Type: {dev_type}, In: {in_len}B, Out: {out_len}B)"
             item = QListWidgetItem(list_text)
-            item.setData(Qt.UserRole, mac_id)
+            item.setData(Qt.UserRole, (mac_id, in_len, out_len))
             self.device_list.addItem(item)
 
     def on_selection_changed(self):
@@ -92,12 +94,12 @@ class DnetScanDialog(QDialog):
         selected = self.device_list.selectedItems()
         if selected:
             # 선택된 아이템의 MAC ID 가져오기
-            self.selected_mac_id = selected[0].data(Qt.UserRole)
+            self.selected_device_info = selected[0].data(Qt.UserRole)
             self.accept() # 다이얼로그 성공적으로 닫기
             
     def on_worker_log(self, level, msg):
         # 스캔 실패 등의 에러가 발생한 경우 UI에 표시
-        if level == "ERROR":
+        if level == ("ERROR" or "WARNING"):
             self.status_label.setText(f"<font color='red'>오류 발생: {msg}</font>")
             self.rescan_btn.setEnabled(True)
 

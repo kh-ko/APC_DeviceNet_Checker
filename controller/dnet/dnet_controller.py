@@ -16,7 +16,10 @@ class DnetController(QObject):
     # 크로스 스레드(Cross-thread) 통신을 위한 시그널 정의
     cmd_connect_module = Signal(int)
     cmd_disconnect_module = Signal()
-    cmd_connect_slave = Signal(int)
+    cmd_connect_slave = Signal(int, int, int)
+
+    cmd_start_polling = Signal(int)
+    cmd_stop_polling = Signal()
 
     def __init__(self, parent_window):
         super().__init__(parent_window)
@@ -36,6 +39,10 @@ class DnetController(QObject):
         self.cmd_disconnect_module.connect(self.worker.disconnect_module, Qt.BlockingQueuedConnection)
         self.cmd_connect_slave.connect(self.worker.connect_slave)
         self.worker.log_msg_signal.connect(self.on_dnet_log)
+        self.worker.poll_rx_signal.connect(self.on_dnet_polling_data)
+
+        self.cmd_start_polling.connect(self.worker.start_polling)
+        self.cmd_stop_polling.connect(self.worker.stop_polling)
 
     def connect_module(self, conn_info: dict):
         """
@@ -53,11 +60,11 @@ class DnetController(QObject):
         if scan_dialog.exec() == QDialog.Accepted:
             self.open_select_schema()
 
-            mac_id = scan_dialog.selected_mac_id
-            print(f"[Controller] 선택된 MAC ID: {mac_id}")
+            mac_id, in_len, out_len = scan_dialog.selected_device_info
+            self.parent_window.console.add_message(MsgType.INFO, f"[Controller] 선택된 MAC ID: {mac_id}, In: {in_len}, Out: {out_len}")
             
             # 3. 타겟 슬레이브 지정 (ONLINE 상태 변경)
-            self.cmd_connect_slave.emit(mac_id)
+            self.cmd_connect_slave.emit(mac_id, in_len, out_len)
             
             # TODO: 이후 어떤 프로토콜(JSON)을 테스트할지 고르는 UI 연동
         else:
@@ -79,6 +86,9 @@ class DnetController(QObject):
 
         self.parent_window.console.add_message(consoleMsgType, message)
 
+    def on_dnet_polling_data(self, mac_id, con_type, bytes_data : bytes):
+        self.parent_window.console.add_message(MsgType.RX, f"MAC ID: {mac_id}, Connection Type: {con_type}, Data: {bytes_data.hex(' ')}")
+
     def disconnect_module(self):
         self.cmd_disconnect_module.emit()
         
@@ -97,6 +107,20 @@ class DnetController(QObject):
         self.worker_thread.wait()
 
         print("DnetController shutdown")
+
+    def create_dnet_widget(self, schema_path: str):
+        while self.parent_window.left_layout.count():
+            child = self.parent_window.left_layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        self.dnet_widget = DnetWidget(schema_path)
+        
+        self.dnet_widget.sig_start_polling.connect(self.cmd_start_polling.emit)
+        self.dnet_widget.sig_stop_polling.connect(self.cmd_stop_polling.emit)
+
+        self.parent_window.left_layout.addWidget(self.dnet_widget)
+        self.dnet_widget.update_ui()
 
     def create_new_schema(self):
         # 새로운 스키마 이름 입력 받을 QDialog 띄우기
@@ -117,33 +141,15 @@ class DnetController(QObject):
                 "explicit": []
             }, f)
 
-        # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
-        while self.parent_window.left_layout.count():
-            child = self.parent_window.left_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
         # 새로운 DnetWidget 추가
-        self.dnet_widget = DnetWidget(schema_path)
-        self.parent_window.left_layout.addWidget(self.dnet_widget)
-        self.dnet_widget.update_ui()
+        self.create_dnet_widget(schema_path)
         return True
 
     def open_select_schema(self):
         schema_dialog = SchemaSelectDialog(self.parent_window)
         if schema_dialog.exec() == QDialog.Accepted:
             schema_path = schema_dialog.selected_schema
-            
-            # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
-            while self.parent_window.left_layout.count():
-                child = self.parent_window.left_layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
-
-            # 새로운 DnetWidget 추가
-            self.dnet_widget = DnetWidget(schema_path)
-            self.parent_window.left_layout.addWidget(self.dnet_widget)
-            self.dnet_widget.update_ui()
+            self.create_dnet_widget(schema_path)
         else:
             # 빈 스키마 파일 만들기
             return False
@@ -162,17 +168,8 @@ class DnetController(QObject):
 
         dnetModel = DnetModel()
         schema_path = dnetModel.save_as_to_json(schema_name)
-            
-        # 기존에 추가된 위젯이 있다면 제거 (중복 방지)
-        while self.parent_window.left_layout.count():
-            child = self.parent_window.left_layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
 
-        # 새로운 DnetWidget 추가
-        self.dnet_widget = DnetWidget(schema_path)
-        self.parent_window.left_layout.addWidget(self.dnet_widget)
-        self.dnet_widget.update_ui()
+        self.create_dnet_widget(schema_path)
 
     def remove_schema(self):
         dnetModel = DnetModel()

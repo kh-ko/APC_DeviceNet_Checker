@@ -8,6 +8,8 @@ from utils.file_path import get_app_path
 # I7565DNM API 에러 코드
 I7565DNM_NO_ERROR = 0
 DNMXS_NOW_SCANNING = 1055
+DNMXS_DEVICE_EXIST = 1057         # 추가
+DNMXS_POLL_ALREADY_EXIST = 1105   # 추가
 
 # =========================================================================
 # 🚦 워커 상태 정의 (State Machine)
@@ -87,11 +89,19 @@ class DnetWorker(QObject):
         # 슬레이브와의 연결을 벗어날 때 (ONLINE/POLLING -> READY/DISCONNECTED)
         if old_state in (WorkerState.ONLINE, WorkerState.POLLING) and new_state not in (WorkerState.ONLINE, WorkerState.POLLING):
             self.explicit_timer.stop()
+            if self.dll and self.target_mac_id is not None:
+                self.dll.I7565DNM_StopDevice(self.current_port, self.target_mac_id)
+                self.dll.I7565DNM_RemoveIOConnection(self.current_port, self.target_mac_id, 1)
+                self.dll.I7565DNM_RemoveDevice(self.current_port, self.target_mac_id)
+                self.log_msg_signal.emit("INFO", f"슬레이브(MAC: {self.target_mac_id}) 설정 해제 완료")
 
         # -------------------------------------------------------------
         # [ENTRY Actions] 새로운 상태로 진입할 때의 시작 작업
         # -------------------------------------------------------------
         if new_state == WorkerState.DISCONNECTED:
+            if self.dll and old_state != WorkerState.DISCONNECTED:
+                self.dll.I7565DNM_CloseModule(self.current_port)
+                self.log_msg_signal.emit("INFO", f"마스터 모듈(Port: {self.current_port}) 연결 해제 완료")
             self.target_mac_id = None
             
         elif new_state == WorkerState.READY:
@@ -150,16 +160,30 @@ class DnetWorker(QObject):
             return
 
         self._transition_to(WorkerState.DISCONNECTED)
-        self.dll.I7565DNM_CloseModule(self.current_port)
 
 
     # =========================================================================
     # 🎯 SLOTS: 슬레이브 연결 관리
     # =========================================================================
-    @Slot(int)
-    def connect_slave(self, mac_id: int):
+    @Slot(int, int, int)
+    def connect_slave(self, mac_id: int, in_len: int, out_len: int):
         if self.state != WorkerState.READY:
             self.log_msg_signal.emit("WARNING", f"현재 상태({self.state.name})에서는 슬레이브를 지정할 수 없습니다. (READY 상태 필요)")
+            return
+
+        res_add = self.dll.I7565DNM_AddDevice(self.current_port, mac_id, 2500)
+        if res_add != I7565DNM_NO_ERROR and res_add != DNMXS_DEVICE_EXIST: 
+            self.log_msg_signal.emit("ERROR", f"AddDevice 실패 (코드: {res_add})")
+            return
+
+        res_io = self.dll.I7565DNM_AddIOConnection(self.current_port, mac_id, 1, in_len, out_len, 2500)
+        if res_io != I7565DNM_NO_ERROR and res_io != DNMXS_POLL_ALREADY_EXIST: 
+            self.log_msg_signal.emit("ERROR", f"AddIOConnection 실패 (코드: {res_io})")
+            return
+
+        res_start = self.dll.I7565DNM_StartDevice(self.current_port, mac_id)
+        if res_start != I7565DNM_NO_ERROR:
+            self.log_msg_signal.emit("ERROR", f"StartDevice 실패 (코드: {res_start})")
             return
 
         self.target_mac_id = mac_id
@@ -184,6 +208,10 @@ class DnetWorker(QObject):
         if self.state in (WorkerState.DISCONNECTED, WorkerState.SCANNING) or not self.dll:
             self.log_msg_signal.emit("WARNING", f"현재 상태({self.state.name})에서는 스캔을 시작할 수 없습니다.")
             return
+
+        if self.state in (WorkerState.ONLINE, WorkerState.POLLING):
+            self.log_msg_signal.emit("INFO", "새로운 스캔을 위해 기존 슬레이브와의 연결을 해제합니다.")
+            self._transition_to(WorkerState.READY)
 
         self.pre_scan_state = self.state 
         self._transition_to(WorkerState.SCANNING)
@@ -275,7 +303,7 @@ class DnetWorker(QObject):
         if res == I7565DNM_NO_ERROR and io_len.value > 0:
             self.poll_rx_signal.emit(self.target_mac_id, 1, bytes(io_data_buffer[:io_len.value]))
         else:
-            self.log_msg_signal.emit("ERROR", f"[Poll In] 데이터 읽기 실패 (코드: {res})")
+            self.log_msg_signal.emit("ERROR", f"[Poll In] 데이터 읽기 실패 (코드: {res}) port: {self.current_port}, mac_id: {self.target_mac_id}")
 
     def _check_explicit_response(self):
         if self.state not in (WorkerState.ONLINE, WorkerState.POLLING) or not self.dll:
@@ -350,3 +378,13 @@ class DnetWorker(QObject):
         self.dll.I7565DNM_IsSearchOK.restype = ctypes.c_uint32
         self.dll.I7565DNM_GetSearchedDevices.argtypes = [ctypes.c_uint8, ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint16)]
         self.dll.I7565DNM_GetSearchedDevices.restype = ctypes.c_uint32
+        self.dll.I7565DNM_AddDevice.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16]
+        self.dll.I7565DNM_AddDevice.restype = ctypes.c_uint32
+        self.dll.I7565DNM_AddIOConnection.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.c_uint16, ctypes.c_uint16]
+        self.dll.I7565DNM_AddIOConnection.restype = ctypes.c_uint32
+        self.dll.I7565DNM_StartDevice.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+        self.dll.I7565DNM_StartDevice.restype = ctypes.c_uint32
+        self.dll.I7565DNM_StopDevice.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+        self.dll.I7565DNM_StopDevice.restype = ctypes.c_uint32
+        self.dll.I7565DNM_RemoveDevice.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+        self.dll.I7565DNM_RemoveDevice.restype = ctypes.c_uint32

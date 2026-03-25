@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTabWidget, QScrollArea, QFormLayout, 
     QLabel, QComboBox, QSpinBox, QDoubleSpinBox, QPushButton, QHBoxLayout, QDialog
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 from model.dnet.dnet_model import DnetModel
 from model.dnet.dnet_item_model import BaseDnetItem
@@ -23,6 +23,9 @@ class DnetWidget(QWidget):
     DnetModel의 데이터를 읽어와 Poll-In, Poll-Out, Explicit 메시지를 
     탭 형태로 보여주는 커스텀 위젯입니다.
     """
+    sig_start_polling = Signal(int)
+    sig_stop_polling = Signal()
+
     def __init__(self, path: str, parent=None):
         super().__init__(parent)
         
@@ -56,10 +59,12 @@ class DnetWidget(QWidget):
         
         # 3. Polling 시작 버튼
         self.btn_start_polling = QPushButton("Polling 시작")
+        self.btn_start_polling.clicked.connect(self._on_start_polling_clicked)
         self.top_control_layout.addWidget(self.btn_start_polling)
         
         # 4. Polling 중지 버튼
         self.btn_stop_polling = QPushButton("Polling 중지")
+        self.btn_stop_polling.clicked.connect(self._on_stop_polling_clicked)
         self.top_control_layout.addWidget(self.btn_stop_polling)
         
         # 5. Out 데이터 쓰기 버튼
@@ -167,6 +172,12 @@ class DnetWidget(QWidget):
             child = layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+
+    def _on_start_polling_clicked(self):
+        self.sig_start_polling.emit(self.spin_cycle.value())
+
+    def _on_stop_polling_clicked(self):
+        self.sig_stop_polling.emit()
 
     def on_pollin_add(self):
         new_item = PollInItem()
