@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import QApplication
 import qdarktheme
-from view.home_win import HomeWin
+from app.ui.home_win import HomeWin
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

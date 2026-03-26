@@ -1,13 +1,9 @@
 import os
 import sys
-
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QLabel, QListWidget, 
-                               QPushButton, QHBoxLayout, QListWidgetItem, QMessageBox)
-from PySide6.QtCore import Qt, Signal
-
-from utils.file_path import get_app_path
-
 import qdarktheme
+
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QListWidget, QHBoxLayout, QListWidgetItem)
+from PySide6.QtCore import Qt
 
 from app.file_helper.file_helper import get_dnet_schema_path
 from app.model.global_define import NetworkType

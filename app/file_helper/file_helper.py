@@ -11,3 +11,6 @@ def get_schema_path():
 
 def get_dnet_schema_path():
     return os.path.join(get_schema_path(), "dnet")
+
+def get_i7565dnm_dll_path():
+    return os.path.join(get_app_path(), "x64", "I7565DNM.dll")

@@ -1,12 +1,15 @@
 import qdarktheme
 
-from PySide6.QtCore import QObject, QThread, Signal, Qt
-from PySide6.QtWidgets import QProgressDialog, QMessageBox, QDialog
+from PySide6.QtCore import QObject, QThread, Signal, Qt, Slot
+from PySide6.QtWidgets import QProgressDialog, QMessageBox, QDialog, QHBoxLayout, QTabWidget, QWidget, QVBoxLayout
 
 from app.model.global_define import NetworkType
 from app.model.dnet.dnet_model import DnetModel
 
+from app.network_service.dnet_i7565dnm_svc import DnetI7565DNMSvc
+
 from app.ui.components.composit.console_widget import MsgType
+from app.ui.components.custom.custom_controls import CustomSpinBox, CustomLabel, CustomPushButton
 from app.ui.network_view import NetworkView
 from app.ui.dialog.schema_select_dialog import SchemaSelectDialog
 from app.ui.dialog.slave_select_dialog import SlaveSelectDialog
@@ -29,6 +32,20 @@ class DnetView(NetworkView):
         self.progress_dialog = None
         self.scan_progress_dialog = None
 
+        self.dnet_svc = DnetI7565DNMSvc()
+
+        self.dnet_svc.sig_add_log.connect(self.sig_add_log)
+        self.dnet_svc.sig_connect_network_finished.connect(self.on_connect_network_finished)
+        self.dnet_svc.sig_connect_slave_finished.connect(self.on_connect_slave_finished)
+        self.dnet_svc.sig_scan_slave_finished.connect(self.on_scan_slave_finished)
+
+        self.sig_connect_module.connect(self.dnet_svc.connect_module)
+        self.sig_scan_slave.connect(self.dnet_svc.search_devices)
+        self.sig_connect_slave.connect(self.dnet_svc.connect_slave)
+        self.sig_disconnect_module.connect(self.dnet_svc.disconnect_module)
+
+
+
     ################################
     # public APIs
     ################################
@@ -36,27 +53,14 @@ class DnetView(NetworkView):
         self.sig_add_log.emit(MsgType.INFO, "[DnetView][shutdown]")
         self.sig_disconnect_module.emit()
 
-        #Todo: Service delete -> 쓰레드 종료 -> 종료 대기
-
         self.on_connect_network_canceled()
         self.on_scan_slave_canceled()
 
     def connect_network(self, conn_info):
         self.sig_add_log.emit(MsgType.INFO, f"[DnetView][connect_network] conn_info: {conn_info.get('Comport', '')}")
-        """
-        i7564DNM 모듈에 연결하기전에 스키마 파일을 선택 이후 화면을 꾸미고 연결 시도
-        """
-        dialog = SchemaSelectDialog(NetworkType.DNET.value)
-        if dialog.exec() == QDialog.Accepted:
-            schema_path = dialog.selected_schema
-        else:
-            self.sig_add_log.emit(MsgType.INFO, f"[DnetView][connect_network] 스키마 파일 선택 취소")
-            return
-
-        self.__build_ui(schema_path)
 
         """
-        i7564DNM 모듈에 연결 시도 및 팝업 등 제어 파트
+        i7564DNM 모듈에 연결 
         """
         # connection_dialog에서 내부 데이터로 찐 포트명(예: "COM5") 반환
         port_str = conn_info.get("Comport", "COM1")
@@ -145,10 +149,88 @@ class DnetView(NetworkView):
             self.sig_connect_slave.emit(mac_id, in_len, out_len)
         else:
             return
+
+    def on_connect_slave_finished(self, success: bool):
+        self.sig_add_log.emit(MsgType.INFO, f"[DnetView][on_connect_slave_finished] success: {success}")
+        self.on_connect_slave_canceled()
+
+        if success:
+            self.sig_add_log.emit(MsgType.INFO, "Slave에 연결되었습니다.")
+        else:
+            self.sig_add_log.emit(MsgType.ERROR, "Slave에 연결할 수 없습니다.")
+            return
+
+        """
+        스키마 파일을 선택하여 화면을 구성한다.
+        """
+        dialog = SchemaSelectDialog(NetworkType.DNET.value)
+        if dialog.exec() == QDialog.Accepted:
+            schema_path = dialog.selected_schema
+        else:
+            self.sig_add_log.emit(MsgType.INFO, f"[DnetView][connect_network] 스키마 파일 선택 취소")
+            return
+
+        self.__build_ui(schema_path)
         
     ################################
     # private functions
     ################################            
+    def _init_ui(self):
+        self.main_layout = QVBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # --- 상단 컨트롤 패널 추가 ---
+        self.top_control_layout = QHBoxLayout()
+        self.top_control_layout.setContentsMargins(5, 5, 5, 5)
+        self.top_control_layout.setSpacing(10)
+
+        # 1. 이름 라벨
+        # 모델에 이름 속성이 있다면 self.dnet_model.name 등으로 변경 가능합니다.
+        self.lbl_name = CustomLabel("이름 : DNET 장치") 
+        self.top_control_layout.addWidget(self.lbl_name)
+        
+        # 2. 사이클 주기 입력 (ms)
+        self.top_control_layout.addWidget(CustomLabel("사이클 주기:"))
+        self.spin_cycle = CustomSpinBox()
+        self.spin_cycle.setRange(1, 10000) # 1ms ~ 10000ms 범위 설정
+        self.spin_cycle.setValue(100)      # 기본값 100ms
+        self.spin_cycle.setSuffix(" ms")   # 숫자 뒤에 'ms' 텍스트 표시
+        self.top_control_layout.addWidget(self.spin_cycle)
+        
+        # 3. Polling 시작 버튼
+        self.btn_start_polling = CustomPushButton("Polling 시작")
+        self.btn_start_polling.clicked.connect(self._on_start_polling_clicked)
+        self.top_control_layout.addWidget(self.btn_start_polling)
+        
+        # 4. Polling 중지 버튼
+        self.btn_stop_polling = CustomPushButton("Polling 중지")
+        self.btn_stop_polling.clicked.connect(self._on_stop_polling_clicked)
+        self.top_control_layout.addWidget(self.btn_stop_polling)
+        
+        # 5. Out 데이터 쓰기 버튼
+        self.btn_write_out = CustomPushButton("Out 데이터 쓰기")
+        self.btn_write_out.clicked.connect(self._on_write_out_clicked)
+        self.top_control_layout.addWidget(self.btn_write_out)
+        
+        # 남는 우측 여백을 밀어주어 위젯들을 좌측 정렬되게 함
+        self.top_control_layout.addStretch() 
+        
+        # 메인 레이아웃에 상단 컨트롤 패널 추가 (탭 위젯보다 먼저 추가되어야 상단에 위치함)
+        self.main_layout.addLayout(self.top_control_layout)
+
+        # 탭 위젯 생성
+        self.tab_widget = QTabWidget(self)
+        self.main_layout.addWidget(self.tab_widget)
+        
+        # 각 통신 영역별 스크롤 가능한 탭 생성
+        self.poll_in_tab, self.poll_in_layout = self._create_scrollable_tab()
+        self.poll_out_tab, self.poll_out_layout = self._create_scrollable_tab()
+        self.explicit_tab, self.explicit_layout = self._create_scrollable_tab()
+        
+        self.tab_widget.addTab(self.poll_in_tab, "Poll-In (RX)")
+        self.tab_widget.addTab(self.poll_out_tab, "Poll-Out (TX)")
+        self.tab_widget.addTab(self.explicit_tab, "Explicit")
+
     def __build_ui(self, schema_path):
         model : DnetModel = DnetModel()
         model.load_from_json(schema_path)

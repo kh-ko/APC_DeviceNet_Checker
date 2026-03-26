@@ -1,10 +1,14 @@
-from PySide6.QtWidgets import QComboBox, QSpinBox, QLineEdit, QLabel, QDialogButtonBox
+from PySide6.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QLabel, QDialogButtonBox, QPushButton
 
 class CustomComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
 
 class CustomSpinBox(QSpinBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)        
+
+class CustomDoubleSpinBox(QDoubleSpinBox):
     def __init__(self, parent=None):
         super().__init__(parent)        
 

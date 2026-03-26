@@ -1,4 +1,5 @@
 import qdarktheme
+
 from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QFormLayout, QDialogButtonBox)
 from PySide6.QtSerialPort import QSerialPortInfo # COM 포트 인식을 위해 추가
 
