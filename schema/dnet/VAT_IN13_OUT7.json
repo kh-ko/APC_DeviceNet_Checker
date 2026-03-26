@@ -479,5 +479,192 @@
             "write_ready_data": ""
         }
     ],
-    "explicit": []
+    "explicit": [
+        {
+            "name": "VALVE CLOSED CHECK",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "valve is not closed",
+                    "value": 0
+                },
+                {
+                    "text": "valve is closed",
+                    "value": 1
+                }
+            ],
+            "bitmap": null,
+            "enabled": true,
+            "size": 1,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 8,
+            "instance_id": 1,
+            "attribute_id": 3,
+            "access_type": "RO",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "SETPOINT TYPE",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "pressure control",
+                    "value": 0
+                },
+                {
+                    "text": "position control",
+                    "value": 1
+                }
+            ],
+            "bitmap": null,
+            "enabled": true,
+            "size": 1,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 0,
+            "attribute_id": 8,
+            "access_type": "RW",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "CTRL MODE(PRES)",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "control mode",
+                    "value": 0
+                },
+                {
+                    "text": "close valve",
+                    "value": 1
+                },
+                {
+                    "text": "open valve",
+                    "value": 2
+                },
+                {
+                    "text": "hold",
+                    "value": 3
+                },
+                {
+                    "text": "safe state",
+                    "value": 4
+                }
+            ],
+            "bitmap": null,
+            "enabled": true,
+            "size": 1,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 1,
+            "attribute_id": 5,
+            "access_type": "RW",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "CTRL MODE(POSI)",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "control mode",
+                    "value": 0
+                },
+                {
+                    "text": "close valve",
+                    "value": 1
+                },
+                {
+                    "text": "open valve",
+                    "value": 2
+                },
+                {
+                    "text": "hold",
+                    "value": 3
+                },
+                {
+                    "text": "safe state",
+                    "value": 4
+                }
+            ],
+            "bitmap": null,
+            "enabled": true,
+            "size": 1,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 5,
+            "access_type": "RW",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "POSI SETPOINT(INT16)",
+            "type": "int16",
+            "ui_type": "number",
+            "enum_list": null,
+            "bitmap": null,
+            "enabled": true,
+            "size": 2,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 6,
+            "access_type": "RW",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "POSI SETPOINT(FLOAT)",
+            "type": "float",
+            "ui_type": "real",
+            "enum_list": null,
+            "bitmap": null,
+            "enabled": true,
+            "size": 4,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 6,
+            "access_type": "RW",
+            "read_data": "",
+            "write_data": ""
+        },
+        {
+            "name": "RESET",
+            "type": "none",
+            "ui_type": "action",
+            "enum_list": null,
+            "bitmap": null,
+            "enabled": true,
+            "size": 0,
+            "offset": 0,
+            "is_json_parsing_err": false,
+            "service_code": 5,
+            "class_id": 1,
+            "instance_id": 1,
+            "attribute_id": 0,
+            "access_type": "Exe",
+            "read_data": "",
+            "write_data": ""
+        }
+    ]
 }

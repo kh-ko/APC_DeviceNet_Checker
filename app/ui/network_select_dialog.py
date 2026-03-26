@@ -1,13 +1,11 @@
-import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QToolBar, QDialog, 
-                               QVBoxLayout, QFormLayout, QComboBox, QSpinBox, 
-                               QLineEdit, QDialogButtonBox)
-from PySide6.QtGui import QAction, QPalette
-from PySide6.QtSerialPort import QSerialPortInfo # COM 포트 인식을 위해 추가
 import qdarktheme
+from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QFormLayout, QDialogButtonBox)
+from PySide6.QtSerialPort import QSerialPortInfo # COM 포트 인식을 위해 추가
+
+from app.ui.components.custom.custom_controls import CustomComboBox, CustomSpinBox, CustomLineEdit, CustomDialogButtonBox
 
 # --- 연결 설정 다이얼로그 클래스 ---
-class ConnectDialog(QDialog):
+class NetworkSelectDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("장치 연결 설정")
@@ -19,12 +17,11 @@ class ConnectDialog(QDialog):
         self.layout.addLayout(self.form_layout)
 
         # 1. 위젯 생성
-        self.network_combo = QComboBox()
+        self.network_combo = CustomComboBox()
         self.network_combo.addItems(["Device Net", "RS232", "RS485", "EtherNet"])
         
-        self.comport_combo = QComboBox()
+        self.comport_combo = CustomComboBox()
         # 현재 PC에서 사용 가능한 COM 포트 목록을 가져와 콤보박스에 추가
-        self.comport_combo = QComboBox()
         for port in QSerialPortInfo.availablePorts():
             port_name = port.portName()
             description = port.description()
@@ -35,30 +32,30 @@ class ConnectDialog(QDialog):
             # addItem(화면에_보일_글자, 내부적으로_저장할_실제_데이터)
             self.comport_combo.addItem(display_text, port_name)
         
-        self.address_spin = QSpinBox()
+        self.address_spin = CustomSpinBox()
         self.address_spin.setRange(1, 255) # 주소 범위 설정
         
-        self.ip_input = QLineEdit()
+        self.ip_input = CustomLineEdit()
         self.ip_input.setPlaceholderText("예: 192.168.0.1")
         
-        self.port_spin = QSpinBox()
+        self.port_spin = CustomSpinBox()
         self.port_spin.setRange(1, 65535)
         self.port_spin.setValue(5000)
         
-        self.termination_combo = QComboBox()
+        self.termination_combo = CustomComboBox()
         self.termination_combo.addItems(["CR+LF", "CR", "LF"])
         
-        self.baudrate_combo = QComboBox()
+        self.baudrate_combo = CustomComboBox()
         self.baudrate_combo.addItems(["9600", "19200", "38400", "57600", "115200"])
         self.baudrate_combo.setCurrentText("115200")
         
-        self.databits_combo = QComboBox()
+        self.databits_combo = CustomComboBox()
         self.databits_combo.addItems(["8", "7"])
         
-        self.parity_combo = QComboBox()
+        self.parity_combo = CustomComboBox()
         self.parity_combo.addItems(["None", "Even", "Odd"])
         
-        self.stopbits_combo = QComboBox()
+        self.stopbits_combo = CustomComboBox()
         self.stopbits_combo.addItems(["1", "2"])
 
         # 2. 폼 레이아웃에 위젯 추가 (라벨과 함께 배치됨)
@@ -74,7 +71,7 @@ class ConnectDialog(QDialog):
         self.form_layout.addRow("StopBits:", self.stopbits_combo)
 
         # 3. 연결하기 / 취소 버튼 추가 (QDialogButtonBox 사용)
-        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box = CustomDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         self.button_box.button(QDialogButtonBox.Ok).setText("연결하기")
         self.button_box.button(QDialogButtonBox.Cancel).setText("취소")
         self.button_box.accepted.connect(self.accept) # Ok 누르면 다이얼로그 승인
