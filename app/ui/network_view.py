@@ -5,10 +5,13 @@ class NetworkView(QWidget):
     def shutdown(self):
         pass
 
+    def connect_network(self, conn_info):
+        pass
+
     def create_new_schema(self):
         pass
 
-    def load_schema(self):
+    def open_select_schema(self):
         pass
 
     def save_schema(self):

@@ -3,11 +3,13 @@ import qdarktheme
 from PySide6.QtWidgets import QApplication, QMainWindow, QSplitter, QWidget, QVBoxLayout, QDialog
 from PySide6.QtCore import Qt
 
+from app.model.global_define import NetworkType
+
 from app.ui.components.composit.console_widget import ConsoleWidget
 from app.ui.components.composit.custom_toolbar import CustomToolBar
 from app.ui.network_view import NetworkView
 from app.ui.network_dnet.dnet_view import DnetView
-from app.ui.network_select_dialog import NetworkSelectDialog
+from app.ui.dialog.network_select_dialog import NetworkSelectDialog
 
 
 class HomeWin(QMainWindow):
@@ -80,19 +82,22 @@ class HomeWin(QMainWindow):
             # 다이얼로그에서 데이터 가져오기
             conn_info = dialog.get_connection_info()
             
-            new_network_view = None
-
-            if conn_info["Network"] == "Device Net":
-                new_network_view = DnetView(self)
-            
             if self.curr_network_view:
                 self.curr_network_view.shutdown()
                 self.left_layout.removeWidget(self.curr_network_view)
+                self.curr_network_view.deleteLater()
+            
+            new_network_view = None
 
+            if conn_info["Network"] == NetworkType.DNET.value:
+                new_network_view = DnetView(self)
+            
             self.curr_network_view = new_network_view
 
             if self.curr_network_view:
+                self.curr_network_view.sig_add_log.connect(self.console.add_message)
                 self.left_layout.addWidget(self.curr_network_view)
+                self.curr_network_view.connect_network(conn_info)
 
     def on_new_clicked(self):
         if self.curr_network_view:

@@ -2,6 +2,7 @@ import qdarktheme
 from PySide6.QtWidgets import (QApplication, QDialog, QVBoxLayout, QFormLayout, QDialogButtonBox)
 from PySide6.QtSerialPort import QSerialPortInfo # COM 포트 인식을 위해 추가
 
+from app.model.global_define import NetworkType
 from app.ui.components.custom.custom_controls import CustomComboBox, CustomSpinBox, CustomLineEdit, CustomDialogButtonBox
 
 # --- 연결 설정 다이얼로그 클래스 ---
@@ -18,7 +19,7 @@ class NetworkSelectDialog(QDialog):
 
         # 1. 위젯 생성
         self.network_combo = CustomComboBox()
-        self.network_combo.addItems(["Device Net", "RS232", "RS485", "EtherNet"])
+        self.network_combo.addItems([net.value for net in NetworkType])
         
         self.comport_combo = CustomComboBox()
         # 현재 PC에서 사용 가능한 COM 포트 목록을 가져와 콤보박스에 추가
@@ -94,12 +95,12 @@ class NetworkSelectDialog(QDialog):
                 label.setVisible(visible)
 
         # 조건에 맞춰 표시/숨김 처리
-        set_row_visible(self.comport_combo, net != "EtherNet")
-        set_row_visible(self.address_spin, net == "RS485")
-        set_row_visible(self.ip_input, net == "EtherNet")
-        set_row_visible(self.port_spin, net == "EtherNet")
+        set_row_visible(self.comport_combo, net != NetworkType.ETHERNET.value)
+        set_row_visible(self.address_spin, net == NetworkType.RS485.value)
+        set_row_visible(self.ip_input, net == NetworkType.ETHERNET.value)
+        set_row_visible(self.port_spin, net == NetworkType.ETHERNET.value)
         
-        show_serial = net in ["RS232", "RS485"]
+        show_serial = net in [NetworkType.RS232.value, NetworkType.RS485.value]
         set_row_visible(self.baudrate_combo, show_serial)
         set_row_visible(self.databits_combo, show_serial)
         set_row_visible(self.parity_combo, show_serial)
@@ -114,14 +115,14 @@ class NetworkSelectDialog(QDialog):
             "Network": net
         }
         
-        if net != "EtherNet":
+        if net != NetworkType.ETHERNET.value:
             info["Comport"] = self.comport_combo.currentData()
-        if net == "RS485":
+        if net == NetworkType.RS485.value:
             info["Address"] = self.address_spin.value()
-        if net == "EtherNet":
+        if net == NetworkType.ETHERNET.value:
             info["IP"] = self.ip_input.text()
             info["Port"] = self.port_spin.value()
-        if net in ["RS232", "RS485"]:
+        if net in [NetworkType.RS232.value, NetworkType.RS485.value]:
             info["Termination"] = self.termination_combo.currentText()
             info["BaudRate"] = self.baudrate_combo.currentText()
             info["DataBits"] = self.databits_combo.currentText()

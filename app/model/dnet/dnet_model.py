@@ -15,6 +15,18 @@ class DataType(str, Enum):
     NONE = 'none' # 기존 로직의 Exe 타입 처리를 위한 값
     EMPTY = ''    # 필드 누락 및 예외 처리를 위한 기본값
 
+class DataType(str, Enum):
+    UINT8 = 'uint8' # ui type은 반드시 'number' 이어야 한다.
+    INT8 = 'int8' # ui type은 반드시 'number' 이어야 한다.
+    UINT16 = 'uint16' # ui type은 반드시 'number' 이어야 한다.
+    INT16 = 'int16' # ui type은 반드시 'number' 이어야 한다.
+    UINT32 = 'uint32' # ui type은 반드시 'number' 이어야 한다.
+    INT32 = 'int32' # ui type은 반드시 'number' 이어야 한다.
+    FLOAT = 'float' # ui type은 반드시 'real' 이어야 한다.
+    BITMAP = 'bitmap' # ui type은 반드시 'table' 이어야 한다.
+    NONE = 'none' # 기존 로직의 Exe 타입 처리를 위한 값
+    EMPTY = ''    # 필드 누락 및 예외 처리를 위한 기본값
+
 class UiType(str, Enum):
     NUMBER = 'number'
     REAL = 'real'
