@@ -1,10 +1,11 @@
 import qdarktheme
 
+from pathlib import Path  # 파일 맨 위쪽 import 영역에 추가
 from PySide6.QtCore import QObject, QThread, Signal, Qt, Slot
-from PySide6.QtWidgets import QProgressDialog, QMessageBox, QDialog, QHBoxLayout, QTabWidget, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QProgressDialog, QMessageBox, QDialog, QHBoxLayout, QTabWidget, QWidget, QVBoxLayout, QScrollArea, QFormLayout
 
 from app.model.global_define import NetworkType
-from app.model.dnet.dnet_model import DnetModel
+from app.model.dnet.dnet_model import DnetModel, CyclicItem, ExplicitItem, AccessType, DataType, UiType
 
 from app.network_service.dnet_i7565dnm_svc import DnetI7565DNMSvc
 
@@ -13,7 +14,9 @@ from app.ui.components.custom.custom_controls import CustomSpinBox, CustomLabel,
 from app.ui.network_view import NetworkView
 from app.ui.dialog.schema_select_dialog import SchemaSelectDialog
 from app.ui.dialog.slave_select_dialog import SlaveSelectDialog
+from app.ui.network_dnet.item_edit_dialog import ItemEditDialog
 
+from app.ui.network_dnet.item_widget import ItemWidget, ItemType
 
 class DnetView(NetworkView):
     """
@@ -43,6 +46,8 @@ class DnetView(NetworkView):
         self.sig_scan_slave.connect(self.dnet_svc.search_devices)
         self.sig_connect_slave.connect(self.dnet_svc.connect_slave)
         self.sig_disconnect_module.connect(self.dnet_svc.disconnect_module)
+
+        self._init_ui()
 
 
 
@@ -99,16 +104,18 @@ class DnetView(NetworkView):
     ################################
     @Slot()
     def on_connect_network_canceled(self):
+        print("[DnetView][on_connect_network_canceled]")
         self.sig_disconnect_module.emit()
         if self.progress_dialog:
-            self.progress_dialog.close()
+            self.progress_dialog.reset()
             self.progress_dialog = None
 
     @Slot()
     def on_scan_slave_canceled(self):
+        print("[DnetView][on_scan_slave_canceled]")
         self.sig_disconnect_module.emit()        
         if self.scan_progress_dialog:
-            self.scan_progress_dialog.close()
+            self.scan_progress_dialog.reset()
             self.scan_progress_dialog = None
 
     ################################
@@ -117,7 +124,10 @@ class DnetView(NetworkView):
     @Slot(bool)
     def on_connect_network_finished(self, success: bool):
         self.sig_add_log.emit(MsgType.INFO, f"[DnetView][on_connect_network_finished] success: {success}")
-        self.on_connect_network_canceled()
+        
+        if self.progress_dialog:
+            self.progress_dialog.reset()
+            self.progress_dialog = None
 
         if success:
             self.sig_add_log.emit(MsgType.INFO, "모듈에 연결되었습니다.")
@@ -141,7 +151,10 @@ class DnetView(NetworkView):
     @Slot(bool)
     def on_scan_slave_finished(self, found_devices):
         self.sig_add_log.emit(MsgType.INFO, f"[DnetView][on_scan_slave_finished] found_devices num: {len(found_devices)}")
-        self.on_scan_slave_canceled()
+        
+        if self.scan_progress_dialog:
+            self.scan_progress_dialog.reset()
+            self.scan_progress_dialog = None
 
         dialog = SlaveSelectDialog(found_devices)
         if dialog.exec() == QDialog.Accepted:
@@ -152,7 +165,6 @@ class DnetView(NetworkView):
 
     def on_connect_slave_finished(self, success: bool):
         self.sig_add_log.emit(MsgType.INFO, f"[DnetView][on_connect_slave_finished] success: {success}")
-        self.on_connect_slave_canceled()
 
         if success:
             self.sig_add_log.emit(MsgType.INFO, "Slave에 연결되었습니다.")
@@ -199,17 +211,17 @@ class DnetView(NetworkView):
         
         # 3. Polling 시작 버튼
         self.btn_start_polling = CustomPushButton("Polling 시작")
-        self.btn_start_polling.clicked.connect(self._on_start_polling_clicked)
+        #self.btn_start_polling.clicked.connect(self._on_start_polling_clicked)
         self.top_control_layout.addWidget(self.btn_start_polling)
         
         # 4. Polling 중지 버튼
         self.btn_stop_polling = CustomPushButton("Polling 중지")
-        self.btn_stop_polling.clicked.connect(self._on_stop_polling_clicked)
+        #self.btn_stop_polling.clicked.connect(self._on_stop_polling_clicked)
         self.top_control_layout.addWidget(self.btn_stop_polling)
         
         # 5. Out 데이터 쓰기 버튼
         self.btn_write_out = CustomPushButton("Out 데이터 쓰기")
-        self.btn_write_out.clicked.connect(self._on_write_out_clicked)
+        #self.btn_write_out.clicked.connect(self._on_write_out_clicked)
         self.top_control_layout.addWidget(self.btn_write_out)
         
         # 남는 우측 여백을 밀어주어 위젯들을 좌측 정렬되게 함
@@ -231,9 +243,230 @@ class DnetView(NetworkView):
         self.tab_widget.addTab(self.poll_out_tab, "Poll-Out (TX)")
         self.tab_widget.addTab(self.explicit_tab, "Explicit")
 
+    def _create_scrollable_tab(self):
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QScrollArea.NoFrame)
+        
+        container = QWidget()
+        # 개별 위젯들이 세로로 차곡차곡 쌓이도록 QVBoxLayout 사용
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(5, 5, 5, 5)
+        layout.setSpacing(2) # 위젯 간 간격 좁게
+        layout.setAlignment(Qt.AlignTop) # 위에서부터 정렬
+        
+        scroll_area.setWidget(container) 
+        return scroll_area, layout
+
     def __build_ui(self, schema_path):
         model : DnetModel = DnetModel()
-        model.load_from_json(schema_path)
+        model.load_from_json(schema_path)   
 
-        # model의 정보를 바탕으로 UI 구성
+        file_name = Path(schema_path).name
+        self.lbl_name.setText(f"이름 : {file_name}")
+        
+        self._clear_layout(self.poll_in_layout)
+        self._clear_layout(self.poll_out_layout)
+        self._clear_layout(self.explicit_layout)
+
+        # 1. Poll-In 위젯 렌더링 및 시그널 연결
+        curr_offset : int = 0
+        for item in model.poll_in_items:
+            widget = ItemWidget(item, ItemType.PollIn)
+            # 시그널 연결
+            widget.sig_enable_changed.connect(self.on_enable_changed)
+            widget.sig_move_up.connect(self.on_move_up)
+            widget.sig_move_down.connect(self.on_move_down)
+            widget.sig_delete.connect(self.on_delete)
+            widget.sig_edit.connect(self.on_edit)    
+
+            widget.set_offset(curr_offset)
+            curr_offset += widget.size
+
+            self.poll_in_layout.addWidget(widget)
+            
+
+        btn_add_pollin = CustomPushButton("+ Poll-In 아이템 추가")
+        btn_add_pollin.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
+        self.poll_in_layout.addWidget(btn_add_pollin)  
+        btn_add_pollin.clicked.connect(self.on_pollin_add)
+
+        # 2. Poll-Out 위젯 렌더링 및 시그널 연결
+        curr_offset = 0
+        for item in model.poll_out_items:
+            widget = ItemWidget(item, ItemType.PollOut)
+            # 시그널 연결
+            widget.sig_enable_changed.connect(self.on_enable_changed)
+            widget.sig_move_up.connect(self.on_move_up)
+            widget.sig_move_down.connect(self.on_move_down)
+            widget.sig_delete.connect(self.on_delete)
+            widget.sig_edit.connect(self.on_edit)    
+
+            widget.set_offset(curr_offset)
+            curr_offset += widget.size
+            
+            self.poll_out_layout.addWidget(widget)
+
+        btn_add_pollout = CustomPushButton("+ Poll-Out 아이템 추가")
+        btn_add_pollout.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
+        self.poll_out_layout.addWidget(btn_add_pollout)  
+        btn_add_pollout.clicked.connect(self.on_pollout_add)
+             
+
+        # 3. Explicit 위젯 렌더링 및 시그널 연결
+        for item in model.explicit_messages:
+            widget = ItemWidget(item, ItemType.Explicit)
+            
+            # 시그널 연결
+            widget.sig_delete.connect(self.on_delete)
+            widget.sig_edit.connect(self.on_edit)
+            #widget.sig_req_write_explicit.connect(self.on_explicit_req_send_explicit)
+            #widget.sig_req_read_explicit.connect(self.on_explicit_req_read_explicit)
+            #widget.sig_req_execute_explicit.connect(self.on_explicit_req_execute_explicit)
+            
+            self.explicit_layout.addWidget(widget)
+
+        btn_add_explicit = CustomPushButton("+ Explicit 아이템 추가")
+        btn_add_explicit.setMinimumHeight(40) # 버튼을 누르기 쉽게 높이를 조금 키움
+        self.explicit_layout.addWidget(btn_add_explicit)   
+        btn_add_explicit.clicked.connect(self.on_explicit_add)
+
+    def _clear_layout(self, layout: QFormLayout):
+        """레이아웃 내부의 모든 아이템을 제거합니다."""
+        while layout.count():
+            child = layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+    def on_enable_changed(self, widget: ItemWidget):
+        self._update_all_offsets(widget.parent().layout())
+
+    def on_pollin_add(self):
+        emptyItem = CyclicItem(
+            name="New Item",
+            type=DataType.UINT8,
+            ui_type=UiType.NUMBER,
+            enum_list=[],
+            bitmap=[],
+            is_json_parsing_err=False
+        )
+
+        widget = ItemWidget(emptyItem, ItemType.PollIn)
+        # 시그널 연결
+        widget.sig_enable_changed.connect(self.on_enable_changed)
+        widget.sig_move_up.connect(self.on_move_up)
+        widget.sig_move_down.connect(self.on_move_down)
+        widget.sig_delete.connect(self.on_delete)
+        widget.sig_edit.connect(self.on_edit)    
+        widget.set_offset(0)
+        self.poll_in_layout.insertWidget(self.poll_in_layout.count() - 1, widget)
+
+        dialog = ItemEditDialog(widget, self)
+        if dialog.exec() == QDialog.Rejected:
+            self.poll_in_layout.removeWidget(widget)
+            widget.deleteLater()
+
+    def on_pollout_add(self):
+        emptyItem = CyclicItem(
+            name="New Item",
+            type=DataType.UINT8,
+            ui_type=UiType.NUMBER,
+            enum_list=[],
+            bitmap=[],
+            is_json_parsing_err=False
+        )
+
+        widget = ItemWidget(emptyItem, ItemType.PollOut)
+        # 시그널 연결
+        widget.sig_enable_changed.connect(self.on_enable_changed)
+        widget.sig_move_up.connect(self.on_move_up)
+        widget.sig_move_down.connect(self.on_move_down)
+        widget.sig_delete.connect(self.on_delete)
+        widget.sig_edit.connect(self.on_edit)    
+        widget.set_offset(0)
+        self.poll_out_layout.insertWidget(self.poll_out_layout.count() - 1, widget)
+
+        dialog = ItemEditDialog(widget, self)
+        if dialog.exec() == QDialog.Rejected:
+            self.poll_out_layout.removeWidget(widget)
+            widget.deleteLater()
+
+    def on_explicit_add(self):
+        emptyItem = ExplicitItem(
+            name="New Item",
+            type=DataType.UINT8,
+            ui_type=UiType.NUMBER,
+            enum_list=[],
+            bitmap=[],
+            service_code = 0,
+            class_id = 1,
+            instance_id = 1,
+            attribute_id = 1,
+            access_type = AccessType.RW,
+            is_json_parsing_err=False
+        )
+
+        widget = ItemWidget(emptyItem, ItemType.Explicit)
+        # 시그널 연결
+        widget.sig_enable_changed.connect(self.on_enable_changed)
+        widget.sig_move_up.connect(self.on_move_up)
+        widget.sig_move_down.connect(self.on_move_down)
+        widget.sig_delete.connect(self.on_delete)
+        widget.sig_edit.connect(self.on_edit)    
+        widget.set_offset(0)
+        self.explicit_layout.insertWidget(self.explicit_layout.count() - 1, widget)
+
+        dialog = ItemEditDialog(widget, self)
+        if dialog.exec() == QDialog.Rejected:
+            self.explicit_layout.removeWidget(widget)
+            widget.deleteLater()
+
+    def on_edit(self, widget: ItemWidget):
+        dialog = ItemEditDialog(widget, self)
+        dialog.exec()
+
+    def on_delete(self, widget: ItemWidget):
+        layout = widget.parent().layout()
+        
+        # 아이템 제거
+        layout.removeWidget(widget)
+        widget.deleteLater()
+        
+        # 삭제 후 offset 재계산
+        self._update_all_offsets(layout)
+
+    def on_move_up(self, widget: ItemWidget):
+        layout = widget.parent().layout()
+        index = layout.indexOf(widget)
+        
+        # 첫 번째 아이템이 아니면 위로 이동 가능
+        if index > 0:
+            layout.removeWidget(widget)
+            layout.insertWidget(index - 1, widget)
+            self._update_all_offsets(layout)
+        
+    def on_move_down(self, widget: ItemWidget):
+        layout = widget.parent().layout()
+        index = layout.indexOf(widget)
+        
+        # 마지막 아이템(추가 버튼 제외)보다 위일 때만 아래로 이동 가능
+        # layout.count() - 1은 '아이템 추가' 버튼이므로, index < layout.count() - 2 조건 사용
+        if index < layout.count() - 2:
+            layout.removeWidget(widget)
+            layout.insertWidget(index + 1, widget)
+            self._update_all_offsets(layout)
+
+    def _update_all_offsets(self, layout):
+        """레이아웃 내의 모든 ItemWidget의 Offset을 재계산합니다."""
+        curr_offset = 0
+        for i in range(layout.count()):
+            item = layout.itemAt(i)
+            widget = item.widget()
+            
+            # ItemWidget인 경우만 Offset 업데이트 (추가 버튼 등 제외)
+            if isinstance(widget, ItemWidget):
+                if widget.chk_enabled:
+                    widget.set_offset(curr_offset)
+                    curr_offset += widget.size
+        
         

@@ -1,6 +1,7 @@
 import qdarktheme
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QListWidget, QHBoxLayout, QListWidgetItem)
+from PySide6.QtCore import Qt
 
 from app.ui.components.custom.custom_controls import CustomLabel, CustomPushButton 
 

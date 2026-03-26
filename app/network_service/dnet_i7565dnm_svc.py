@@ -109,6 +109,7 @@ class DnetI7565DNMSvc(QObject):
     @Slot()
     def search_devices(self):
         self.sig_add_log.emit(MsgType.INFO, f"[DnetI7565DNMSvc] 스캔 시작")
+        print("[DnetI7565DNMSvc] 스캔 시작")
 
         self.clear_resources_without_module()
 

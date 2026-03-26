@@ -24,6 +24,7 @@ class HomeWin(QMainWindow):
 
         self.dnet_thread = QThread()
         self.dnet_svc.moveToThread(self.dnet_thread)
+        self.dnet_thread.start()
         
         # 윈도우 기본 설정
         self.setWindowTitle("User Interface Checker")

@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QLabel, QDialogButtonBox, QPushButton
+from PySide6.QtWidgets import QComboBox, QSpinBox, QDoubleSpinBox, QLineEdit, QLabel, QDialogButtonBox, QPushButton, QCheckBox, QTableWidget
 
 class CustomComboBox(QComboBox):
     def __init__(self, parent=None):
@@ -17,7 +17,7 @@ class CustomLineEdit(QLineEdit):
         super().__init__(parent)
 
 class CustomLabel(QLabel):
-    def __init__(self, text, parent=None):
+    def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
 
 class CustomDialogButtonBox(QDialogButtonBox):
@@ -25,5 +25,13 @@ class CustomDialogButtonBox(QDialogButtonBox):
         super().__init__(parent)
 
 class CustomPushButton(QPushButton):
-    def __init__(self, text, parent=None):
+    def __init__(self, text: str = "", parent=None):
         super().__init__(text, parent)
+
+class CustomCheckBox(QCheckBox):
+    def __init__(self, text: str = "", parent=None):
+        super().__init__(text, parent)
+
+class CustomTableWidget(QTableWidget):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)

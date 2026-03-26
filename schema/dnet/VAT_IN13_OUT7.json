@@ -18,12 +18,7 @@
                     "value": 128
                 }
             ],
-            "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 0,
-            "is_json_parsing_err": false,
-            "data": ""
+            "bitmap": null
         },
         {
             "name": "EXCEPTION DETAIL ALARM",
@@ -226,12 +221,7 @@
                         "CTRL mode invalid"
                     ]
                 }
-            ],
-            "enabled": true,
-            "size": 15,
-            "offset": 1,
-            "is_json_parsing_err": false,
-            "data": ""
+            ]
         },
         {
             "name": "EXCEPTION DETAIL WARNING",
@@ -434,12 +424,7 @@
                         "CTRL mode invalid"
                     ]
                 }
-            ],
-            "enabled": true,
-            "size": 15,
-            "offset": 16,
-            "is_json_parsing_err": false,
-            "data": ""
+            ]
         }
     ],
     "poll-out": [
@@ -448,13 +433,7 @@
             "type": "int16",
             "ui_type": "number",
             "enum_list": null,
-            "bitmap": null,
-            "enabled": true,
-            "size": 2,
-            "offset": 0,
-            "is_json_parsing_err": false,
-            "written_data": "",
-            "write_ready_data": ""
+            "bitmap": null
         },
         {
             "name": "SETPOINT TYPE",
@@ -470,13 +449,7 @@
                     "value": 1
                 }
             ],
-            "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 2,
-            "is_json_parsing_err": false,
-            "written_data": "",
-            "write_ready_data": ""
+            "bitmap": null
         }
     ],
     "explicit": [
@@ -495,17 +468,11 @@
                 }
             ],
             "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 8,
             "instance_id": 1,
             "attribute_id": 3,
-            "access_type": "RO",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RO"
         },
         {
             "name": "SETPOINT TYPE",
@@ -522,17 +489,11 @@
                 }
             ],
             "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 51,
             "instance_id": 0,
             "attribute_id": 8,
-            "access_type": "RW",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RW"
         },
         {
             "name": "CTRL MODE(PRES)",
@@ -561,17 +522,11 @@
                 }
             ],
             "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 51,
             "instance_id": 1,
             "attribute_id": 5,
-            "access_type": "RW",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RW"
         },
         {
             "name": "CTRL MODE(POSI)",
@@ -600,17 +555,11 @@
                 }
             ],
             "bitmap": null,
-            "enabled": true,
-            "size": 1,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 51,
             "instance_id": 2,
             "attribute_id": 5,
-            "access_type": "RW",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RW"
         },
         {
             "name": "POSI SETPOINT(INT16)",
@@ -618,17 +567,11 @@
             "ui_type": "number",
             "enum_list": null,
             "bitmap": null,
-            "enabled": true,
-            "size": 2,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 51,
             "instance_id": 2,
             "attribute_id": 6,
-            "access_type": "RW",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RW"
         },
         {
             "name": "POSI SETPOINT(FLOAT)",
@@ -636,17 +579,11 @@
             "ui_type": "real",
             "enum_list": null,
             "bitmap": null,
-            "enabled": true,
-            "size": 4,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 0,
             "class_id": 51,
             "instance_id": 2,
             "attribute_id": 6,
-            "access_type": "RW",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "RW"
         },
         {
             "name": "RESET",
@@ -654,17 +591,11 @@
             "ui_type": "action",
             "enum_list": null,
             "bitmap": null,
-            "enabled": true,
-            "size": 0,
-            "offset": 0,
-            "is_json_parsing_err": false,
             "service_code": 5,
             "class_id": 1,
             "instance_id": 1,
             "attribute_id": 0,
-            "access_type": "Exe",
-            "read_data": "",
-            "write_data": ""
+            "access_type": "Exe"
         }
     ]
 }
