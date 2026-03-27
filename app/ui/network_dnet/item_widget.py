@@ -4,6 +4,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QCheckBox, QLabel, QPushButt
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor
 
+from app.utils.math_utils import format_sigfigs_width_hex
+
 from app.model.dnet.dnet_model import CyclicItem, ExplicitItem, AccessType, DataType, UiType
 
 from app.ui.components.custom.custom_controls import CustomComboBox, CustomLineEdit, CustomPushButton, CustomCheckBox, CustomTableWidget, CustomLabel, CustomSpinBox, CustomDoubleSpinBox
@@ -138,8 +140,8 @@ class ItemWidget(QWidget):
             self.btn_req_send = CustomPushButton("보내기")
             self.main_layout.addWidget(self.btn_req_read)
             self.main_layout.addWidget(self.btn_req_send)
-            #self.btn_req_read.clicked.connect(self._on_read_clicked)
-            #self.btn_req_send.clicked.connect(self._on_send_clicked)
+            self.btn_req_read.clicked.connect(self.on_req_read_clicked)
+            self.btn_req_send.clicked.connect(self.on_req_send_clicked)
         else:
             self.btn_up = CustomPushButton("▲")
             self.btn_down = CustomPushButton("▼")
@@ -367,42 +369,16 @@ class ItemWidget(QWidget):
                                     
             # 2. 일반 타입 바이트 디코딩 (struct 모듈 활용)
             else:
-                # 3. 타입에 따른 바이트 디코딩 (struct 모듈 활용)
-                if self.type == DataType.UINT8:
-                    val = struct.unpack('<B', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.INT8:
-                    val = struct.unpack('<b', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.UINT16:
-                    val = struct.unpack('<H', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.INT16:
-                    val = struct.unpack('<h', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.UINT32:
-                    val = struct.unpack('<I', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.INT32:
-                    val = struct.unpack('<i', chunk)[0]
-                    parsed_value = str(val)
-                elif self.type == DataType.FLOAT:
-                    val = struct.unpack('<f', chunk)[0]
-                    # 소수점 3자리 정도까지만 출력
-                    parsed_value = f"{val:.3f}"
-                else:
-                    # 알 수 없는 타입은 Hex 형식으로 표시
-                    parsed_value = "0x" + chunk.hex(' ').upper()
+                val, parsed_value = format_sigfigs_width_hex(self.type.value, chunk, 6)
 
             # 4. Enum 매핑이 있다면 값 대신 텍스트로 치환 (옵션)
             if self.ui_type == UiType.ENUM and self.enum_list:
-                hex_parsed_value = "0x" + chunk.hex(' ').upper()
                 for enum_item in self.enum_list:
                     e_value = getattr(enum_item, 'value', None) if not isinstance(enum_item, dict) else enum_item.get('value')
                     e_text = getattr(enum_item, 'text', "") if not isinstance(enum_item, dict) else enum_item.get('text', "")
                     
-                    if str(e_value) == parsed_value:
-                        parsed_value = f"{hex_parsed_value} {parsed_value}:{e_text}"
+                    if e_value == val:
+                        parsed_value = f"{parsed_value}:{e_text}"
                         break
 
             self.lbl_written_value.setText(f"Val: {parsed_value}")
@@ -410,6 +386,51 @@ class ItemWidget(QWidget):
 
         except Exception as e:
             self._set_error_state(is_error=True)
+
+    def get_bytes_data(self, buffer:bytearray):
+        if buffer is None:
+            return
+
+        if self.chk_enabled == False:
+            return
+
+        val = None
+
+        if isinstance(self.input_widget, CustomComboBox):
+            val = self.input_widget.currentData()
+        elif isinstance(self.input_widget, CustomDoubleSpinBox):
+            val = self.input_widget.value()
+        elif isinstance(self.input_widget, CustomSpinBox):
+            val = self.input_widget.value()
+        else:
+            val = 0
+
+        if self.offset + self.size > len(buffer):
+            return
+
+        try:
+            payload = b""
+            if self.type == DataType.UINT8:
+                payload = struct.pack('<B', int(round(val)))
+            elif self.type == DataType.INT8:
+                payload = struct.pack('<b', int(round(val)))
+            elif self.type == DataType.UINT16:
+                payload = struct.pack('<H', int(round(val)))
+            elif self.type == DataType.INT16:
+                payload = struct.pack('<h', int(round(val)))
+            elif self.type == DataType.UINT32:
+                payload = struct.pack('<I', int(round(val)))
+            elif self.type == DataType.INT32:
+                payload = struct.pack('<i', int(round(val)))
+            elif self.type == DataType.FLOAT:
+                payload = struct.pack('<f', float(val))
+
+            # 생성된 payload를 data_buffer의 offset 위치에 복사 (Little Endian 기준)
+            copy_len = min(len(payload), self.size)
+            buffer[self.offset : self.offset + copy_len] = payload[:copy_len]
+
+        except (struct.error, ValueError, TypeError):
+            pass  # 패킹 에러 발생 시 해당 항목은 무시
 
     def _on_enable_changed(self, state):
         """체크박스 상태가 변경되었을 때 호출됩니다."""
@@ -419,6 +440,19 @@ class ItemWidget(QWidget):
         
         # 부모에게 Enable 상태가 변경되었음을 알림 (오프셋 재계산 등이 필요할 수 있음)
         self.sig_enable_changed.emit(self, is_checked)
+
+    def on_req_read_clicked(self):
+        self.sig_req_read_explicit.emit(self.class_id, self.instance_id, self.attribute_id)
+
+    def on_req_send_clicked(self):
+        if self.access_type == AccessType.EXE:
+            self.sig_req_execute_explicit(self.service_code, self.class_id, self.instance_id, self.attribute_id)
+        else:
+            buffer = bytearray(self.size)
+            self.get_bytes_data(buffer)
+            final_bytes = bytes(buffer)
+            self.sig_req_write_explicit.emit(self.class_id, self.instance_id, self.attribute_id, final_bytes)
+        
 
     def _apply_enable_style(self, is_enabled: bool):
         """아이템이 Disable 되면 위젯을 반투명하게 보이도록 처리합니다."""
@@ -440,3 +474,35 @@ class ItemWidget(QWidget):
 
         if self.item_type != ItemType.Explicit:
             self.lbl_01.setText(f"Offset: {self.offset}")
+
+    def make_json(self):
+        def to_dict(obj):
+            if hasattr(obj, 'model_dump'):
+                return obj.model_dump()
+            return obj
+
+        enum_list_data = [to_dict(e) for e in self.enum_list] if self.enum_list else None
+        bitmap_data = [to_dict(b) for b in self.bitmap] if self.bitmap else None
+
+        if self.item_type == ItemType.Explicit:
+            return {
+                "name": self.name,
+                "type": self.type,
+                "ui_type": self.ui_type,
+                "enum_list": enum_list_data,
+                "bitmap": bitmap_data,
+                "service_code": self.service_code,
+                "class_id": self.class_id,
+                "instance_id": self.instance_id,
+                "attribute_id": self.attribute_id,
+                "access_type": self.access_type,
+            }
+        else:
+            # Poll-In, Poll-Out용 JSON 데이터
+            return {
+                "name": self.name,
+                "type": self.type,
+                "ui_type": self.ui_type,
+                "enum_list": enum_list_data,
+                "bitmap": bitmap_data,
+            }

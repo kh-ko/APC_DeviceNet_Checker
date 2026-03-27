@@ -8,7 +8,8 @@
             "program": "${workspaceFolder}/dnet_checker.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
-            "justMyCode": true,
+            "justMyCode": false,
+            "qt": "pyside6",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }

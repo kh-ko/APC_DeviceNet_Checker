@@ -50,11 +50,16 @@ class DnetI7565DNMSvc(QObject):
             
         self.dll = None
         self.current_port = 0
-        
         self.target_mac_id = None
+
+        self.is_active_module = False
+        self.is_add_device = False
+        self.is_add_io = False
+        self.is_start_device = False
         
         self.explicit_queue = queue.Queue()
         self.current_explicit_req = None  # (service_code, class, inst, attr, payload)
+        self._current_explicit_req_buffer = None  # C API 메모리 참조 유지 변수
 
         self.poll_timer = QTimer(self)
         self.poll_timer.timeout.connect(self._read_poll_in_data)
@@ -87,6 +92,7 @@ class DnetI7565DNMSvc(QObject):
         res = self.dll.I7565DNM_ActiveModule(port)
         if res == I7565DNM_NO_ERROR:
             self.current_port = port
+            self.is_active_module = True
             self.sig_connect_network_finished.emit(True)
         else:
             self.sig_add_log.emit(MsgType.ERROR, f"[DnetI7565DNMSvc] 포트 연결 실패 (코드: {res})")
@@ -150,12 +156,16 @@ class DnetI7565DNMSvc(QObject):
             self.sig_connect_slave_finished.emit(False)
             return
 
+        self.is_add_device = True
+
         res_io = self.dll.I7565DNM_AddIOConnection(self.current_port, mac_id, 1, in_len, out_len, 2500)
         if res_io != I7565DNM_NO_ERROR and res_io != DNMXS_POLL_ALREADY_EXIST: 
             self.clear_resources_without_module()
             self.sig_add_log.emit(MsgType.ERROR, f"[DnetI7565DNMSvc] AddIOConnection 실패 (코드: {res_io})")
             self.sig_connect_slave_finished.emit(False)
             return
+
+        self.is_add_io = True
 
         res_start = self.dll.I7565DNM_StartDevice(self.current_port, mac_id)
         if res_start != I7565DNM_NO_ERROR:
@@ -164,11 +174,13 @@ class DnetI7565DNMSvc(QObject):
             self.sig_connect_slave_finished.emit(False)
             return
 
+        self.is_start_device = True
+
         self.sig_add_log.emit(MsgType.INFO, f"[DnetI7565DNMSvc] 슬레이브 연결 성공 (MAC ID: {mac_id})")
         self.sig_connect_slave_finished.emit(True)
 
         self.target_mac_id = mac_id
-        self.explicit_timer.start(20)
+        self.explicit_timer.start(100)
 
 
 
@@ -258,8 +270,11 @@ class DnetI7565DNMSvc(QObject):
                 data_buffer = (ctypes.c_uint8 * data_len)(*data)
             else:
                 data_buffer = ctypes.POINTER(ctypes.c_uint8)()
+            
+            # 메모리가 함수 종료 후 정리되지 않도록 참조 유지
+            self._current_explicit_req_buffer = data_buffer
 
-            # DLL 전송
+            # 1. 8-bit Class/Instance 지원 API (일반적인 슬레이브용)
             res = self.dll.I7565DNM_SendExplicitMSG(
                 self.current_port, self.target_mac_id, service_code, class_id, instance_id, data_len, data_buffer
             )
@@ -267,9 +282,9 @@ class DnetI7565DNMSvc(QObject):
             if res == I7565DNM_NO_ERROR:
                 self.current_explicit_req = req  # 전송 성공 시에만 현재 요청으로 등록
                 data_hex = f" [Payload: {data.hex(' ').upper()}]" if data_len > 0 else ""
-                self.sig_add_log.emit(MsgType.TX, f"[Explicit] Service 0x{service_code:02X} 전송{data_hex}")
+                self.sig_add_log.emit(MsgType.TX, f"[Explicit] Svc 0x{service_code} Cls 0x{class_id} Inst 0x{instance_id} Attr 0x{attribute_id} 전송{data_hex}")
             else:
-                self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 전송 실패 (코드: {res})")
+                self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 전송 실패 (코드: {res}) Svc 0x{service_code} Cls 0x{class_id} Inst 0x{instance_id} Attr 0x{attribute_id} 전송{data_hex}")
                 # 에러 시그널을 UI로 보내 실패 처리
                 self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, b"", False)
             
@@ -286,6 +301,7 @@ class DnetI7565DNMSvc(QObject):
         # 응답 완료, 타임아웃 또는 에러 발생 시 현재 요청 정보 꺼내기
         service_code, class_id, instance_id, attribute_id, data = self.current_explicit_req
         self.current_explicit_req = None  # 큐의 다음 요청이 처리될 수 있도록 상태 비우기
+        self._current_explicit_req_buffer = None  # 포인터 생존 제약 해제
         
         if res_is_ok == I7565DNM_NO_ERROR:
             exp_len = ctypes.c_uint16(0)
@@ -310,7 +326,19 @@ class DnetI7565DNMSvc(QObject):
             self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, b"", False)
             
         elif res_is_ok == DNMXS_SLAVE_RESP_ERROR:
-            self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 슬레이브 에러 (요청 거부됨)")
+            exp_len = ctypes.c_uint16(0)
+            exp_data_buffer = (ctypes.c_uint8 * 256)()
+            res_exp_val = self.dll.I7565DNM_GetExplicitMSGRespValue(
+                self.current_port, self.target_mac_id, ctypes.byref(exp_len), exp_data_buffer
+            )
+            
+            error_details = ""
+            if res_exp_val == I7565DNM_NO_ERROR and exp_len.value > 0:
+                # 슬레이브가 보낸 에러 바이트 (예: [0x02, 0x00] -> Resource Unavailable)
+                error_bytes = bytes(exp_data_buffer[:exp_len.value])
+                error_details = f" (상세 에러 Hex: {error_bytes.hex(' ').upper()})"
+
+            self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 슬레이브 거부{error_details} - Cls:{class_id} Inst:{instance_id}")
             self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, b"", False)
             
         else:
@@ -361,8 +389,11 @@ class DnetI7565DNMSvc(QObject):
             self.dll.I7565DNM_ReadInputData.restype = ctypes.c_uint32
             self.dll.I7565DNM_WriteOutputData.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)]
             self.dll.I7565DNM_WriteOutputData.restype = ctypes.c_uint32
+            
+            # 원래의 8-bit 함수 매핑 (Class, Inst가 8-bit)
             self.dll.I7565DNM_SendExplicitMSG.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)]
             self.dll.I7565DNM_SendExplicitMSG.restype = ctypes.c_uint32
+            
             self.dll.I7565DNM_IsExplicitMSGRespOK.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
             self.dll.I7565DNM_IsExplicitMSGRespOK.restype = ctypes.c_uint32
             self.dll.I7565DNM_GetExplicitMSGRespValue.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint8)]
@@ -417,9 +448,15 @@ class DnetI7565DNMSvc(QObject):
         self.search_timer.stop()
         
         if self.dll and self.target_mac_id is not None and self.current_port != 0:
-            self.dll.I7565DNM_StopDevice(self.current_port, self.target_mac_id)
-            self.dll.I7565DNM_RemoveIOConnection(self.current_port, self.target_mac_id, 1)
-            self.dll.I7565DNM_RemoveDevice(self.current_port, self.target_mac_id)
+            if self.is_start_device:
+                self.dll.I7565DNM_StopDevice(self.current_port, self.target_mac_id)
+                self.is_start_device = False
+            if self.is_add_io:
+                self.dll.I7565DNM_RemoveIOConnection(self.current_port, self.target_mac_id, 1)
+                self.is_add_io = False
+            if self.is_add_device:
+                self.dll.I7565DNM_RemoveDevice(self.current_port, self.target_mac_id)
+                self.is_add_device = False
 
         self.current_explicit_req = None
         self.explicit_queue = queue.Queue()
@@ -430,7 +467,9 @@ class DnetI7565DNMSvc(QObject):
         print("[DnetI7565DNMSvc] clear_all_resources")
         self.clear_resources_without_module()
         if self.dll and self.current_port != 0:
-            self.dll.I7565DNM_CloseModule(self.current_port)
+            if self.is_active_module:
+                self.dll.I7565DNM_CloseModule(self.current_port)
+                self.is_active_module = False
         self.current_port = 0
         
         self.sig_add_log.emit(MsgType.INFO, "[DnetI7565DNMSvc] 모든 리소스 초기화")        
