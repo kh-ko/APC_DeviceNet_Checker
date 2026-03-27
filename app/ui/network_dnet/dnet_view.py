@@ -50,7 +50,7 @@ class DnetView(NetworkView):
         self.dnet_svc.sig_connect_slave_finished.connect(self.on_connect_slave_finished)
         self.dnet_svc.sig_scan_slave_finished.connect(self.on_scan_slave_finished)
         self.dnet_svc.poll_rx_signal.connect(self.on_poll_rx)
-        #self.dnet_svc.explicit_rx_signal.connect(self.on_explicit_rx)
+        self.dnet_svc.explicit_rx_signal.connect(self.on_explicit_rx)
 
         self.sig_connect_module.connect(self.dnet_svc.connect_module)
         self.sig_scan_slave.connect(self.dnet_svc.search_devices)
@@ -347,6 +347,16 @@ class DnetView(NetworkView):
             widget = self.poll_in_layout.itemAt(i).widget()
             if isinstance(widget, ItemWidget):
                 widget.update_read_data(raw_bytes)
+
+    def on_explicit_rx(self, service_code, class_id, instance_id, attribute_id, data, is_ok):
+        if service_code != 14:
+            return
+
+        for i in range(self.explicit_layout.count()):
+            widget = self.explicit_layout.itemAt(i).widget()
+            if isinstance(widget, ItemWidget):
+                if widget.class_id == class_id and widget.instance_id == instance_id and widget.attribute_id == attribute_id:
+                    widget.update_read_data(data)
         
     ################################
     # private functions

@@ -229,8 +229,8 @@ class DnetI7565DNMSvc(QObject):
             data = b""
 
         # Attribute ID가 0이 아니면, CIP 스펙에 맞게 Payload의 첫 바이트로 삽입
-        if attribute_id != 0:
-            data = bytes([attribute_id]) + data
+        # if attribute_id != 0:
+        #    data = bytes([attribute_id]) + data
             
         # [수정] 바로 전송하지 않고 큐에 요청 등록
         self.explicit_queue.put((service_code, class_id, instance_id, attribute_id, data))
@@ -274,17 +274,20 @@ class DnetI7565DNMSvc(QObject):
             # 메모리가 함수 종료 후 정리되지 않도록 참조 유지
             self._current_explicit_req_buffer = data_buffer
 
-            # 1. 8-bit Class/Instance 지원 API (일반적인 슬레이브용)
-            res = self.dll.I7565DNM_SendExplicitMSG(
-                self.current_port, self.target_mac_id, service_code, class_id, instance_id, data_len, data_buffer
-            )
+            if service_code == 16:  # 16 (Set_Attribute_Single)
+                res = self.dll.I7565DNM_SetAttribute(self.current_port, self.target_mac_id, class_id, instance_id, attribute_id, data_len, data_buffer)
+            elif service_code == 14:  # 14 (Get_Attribute_Single)
+                res = self.dll.I7565DNM_GetAttribute(self.current_port, self.target_mac_id, class_id, instance_id, attribute_id)
+            else:  # 기타 범용 서비스 코드 (Reset 등)
+                res = self.dll.I7565DNM_SendExplicitMSG(self.current_port, self.target_mac_id, service_code, class_id, instance_id, data_len, data_buffer)
 
             if res == I7565DNM_NO_ERROR:
                 self.current_explicit_req = req  # 전송 성공 시에만 현재 요청으로 등록
-                data_hex = f" [Payload: {data.hex(' ').upper()}]" if data_len > 0 else ""
-                self.sig_add_log.emit(MsgType.TX, f"[Explicit] Svc 0x{service_code} Cls 0x{class_id} Inst 0x{instance_id} Attr 0x{attribute_id} 전송{data_hex}")
+                data_hex = f" {data.hex(' ').upper()}" if data_len > 0 else ""
+                self.sig_add_log.emit(MsgType.TX, f"[Explicit] Svc {service_code} Cls {class_id} Inst {instance_id} Attr {attribute_id} Len {data_len} 전송{data_hex}")
             else:
-                self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 전송 실패 (코드: {res}) Svc 0x{service_code} Cls 0x{class_id} Inst 0x{instance_id} Attr 0x{attribute_id} 전송{data_hex}")
+                data_hex = f" {data.hex(' ').upper()}" if data_len > 0 else ""
+                self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 전송 실패 (코드: {res}) Svc {service_code} Cls {class_id} Inst {instance_id} Attr {attribute_id} Len {data_len} 전송{data_hex}")
                 # 에러 시그널을 UI로 보내 실패 처리
                 self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, b"", False)
             
@@ -293,33 +296,40 @@ class DnetI7565DNMSvc(QObject):
         # ---------------------------------------------------------
         # [상태 2] 현재 진행 중인 요청이 있을 때: 응답 또는 타임아웃 확인
         # ---------------------------------------------------------
-        res_is_ok = self.dll.I7565DNM_IsExplicitMSGRespOK(self.current_port, self.target_mac_id)
+        service_code, class_id, instance_id, attribute_id, data = self.current_explicit_req
+
+        if service_code == 16:
+            res_is_ok = self.dll.I7565DNM_IsSetAttributeOK(self.current_port, self.target_mac_id)
+        elif service_code == 14:
+            res_is_ok = self.dll.I7565DNM_IsGetAttributeOK(self.current_port, self.target_mac_id)
+        else:
+            res_is_ok = self.dll.I7565DNM_IsExplicitMSGRespOK(self.current_port, self.target_mac_id)
         
         if res_is_ok == DNMXS_WAIT_FOR_SLAVE_RESP:
             return  # 아직 응답 대기 중
-            
-        # 응답 완료, 타임아웃 또는 에러 발생 시 현재 요청 정보 꺼내기
-        service_code, class_id, instance_id, attribute_id, data = self.current_explicit_req
+        
         self.current_explicit_req = None  # 큐의 다음 요청이 처리될 수 있도록 상태 비우기
         self._current_explicit_req_buffer = None  # 포인터 생존 제약 해제
         
         if res_is_ok == I7565DNM_NO_ERROR:
+            rx_bytes = b""
             exp_len = ctypes.c_uint16(0)
             exp_data_buffer = (ctypes.c_uint8 * 256)()
-            res_exp_val = self.dll.I7565DNM_GetExplicitMSGRespValue(
-                self.current_port, self.target_mac_id, ctypes.byref(exp_len), exp_data_buffer
-            )
-            if res_exp_val == I7565DNM_NO_ERROR:
-                rx_bytes = bytes(exp_data_buffer[:exp_len.value])
-                # [핵심] 어느 요청에 대한 응답인지 class, instance, attribute 값을 함께 전달
-                self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, rx_bytes, True)
-                if exp_len.value > 0:
-                    self.sig_add_log.emit(MsgType.RX, f"[Explicit] 정상 수신: {rx_bytes.hex(' ').upper()}")
-                else:
-                    self.sig_add_log.emit(MsgType.RX, f"[Explicit] 정상 수신 (데이터 없음)")
+
+            # 서비스 코드별 데이터 읽기
+            if service_code == 14:
+                res_exp_val = self.dll.I7565DNM_GetAttributeValue(self.current_port, self.target_mac_id, ctypes.byref(exp_len), exp_data_buffer)
+                if res_exp_val == I7565DNM_NO_ERROR:
+                    rx_bytes = bytes(exp_data_buffer[:exp_len.value])
+            elif service_code == 16:
+                res_exp_val = I7565DNM_NO_ERROR  # 쓰기(Set)는 보통 돌아오는 반환 데이터가 없음
             else:
-                self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 데이터 읽기 실패 (코드: {res_exp_val})")
-                self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, b"", False)
+                res_exp_val = self.dll.I7565DNM_GetExplicitMSGRespValue(self.current_port, self.target_mac_id, ctypes.byref(exp_len), exp_data_buffer)
+                if res_exp_val == I7565DNM_NO_ERROR:
+                    rx_bytes = bytes(exp_data_buffer[:exp_len.value])
+
+            self.explicit_rx_signal.emit(service_code, class_id, instance_id, attribute_id, rx_bytes, True)
+            self.sig_add_log.emit(MsgType.RX, f"[Explicit] {rx_bytes.hex(' ').upper()}")
 
         elif res_is_ok == DNMXS_SLAVE_NO_RESP:
             self.sig_add_log.emit(MsgType.ERROR, f"[Explicit] 타임아웃 (Class:{class_id} Inst:{instance_id})")
@@ -390,7 +400,17 @@ class DnetI7565DNMSvc(QObject):
             self.dll.I7565DNM_WriteOutputData.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)]
             self.dll.I7565DNM_WriteOutputData.restype = ctypes.c_uint32
             
-            # 원래의 8-bit 함수 매핑 (Class, Inst가 8-bit)
+            self.dll.I7565DNM_GetAttribute.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8]
+            self.dll.I7565DNM_GetAttribute.restype = ctypes.c_uint32
+            self.dll.I7565DNM_IsGetAttributeOK.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+            self.dll.I7565DNM_IsGetAttributeOK.restype = ctypes.c_uint32
+            self.dll.I7565DNM_GetAttributeValue.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.POINTER(ctypes.c_uint16), ctypes.POINTER(ctypes.c_uint8)]
+            self.dll.I7565DNM_GetAttributeValue.restype = ctypes.c_uint32
+            self.dll.I7565DNM_SetAttribute.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)]
+            self.dll.I7565DNM_SetAttribute.restype = ctypes.c_uint32
+            self.dll.I7565DNM_IsSetAttributeOK.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+            self.dll.I7565DNM_IsSetAttributeOK.restype = ctypes.c_uint32
+
             self.dll.I7565DNM_SendExplicitMSG.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint16, ctypes.POINTER(ctypes.c_uint8)]
             self.dll.I7565DNM_SendExplicitMSG.restype = ctypes.c_uint32
             

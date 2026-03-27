@@ -328,7 +328,7 @@ class ItemWidget(QWidget):
 
     def update_read_data(self, full_raw_data: bytes, is_error: bool = False):
         """통신 모듈로부터 새로운 데이터를 받았을 때 라벨만 업데이트하는 함수"""
-        if self.chk_enable.isChecked() == False:
+        if self.chk_enabled == False:
             return
 
         if is_error or not full_raw_data:
