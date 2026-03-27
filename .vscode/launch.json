@@ -9,7 +9,6 @@
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder}",
             "justMyCode": false,
-            "qt": "pyside6",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
