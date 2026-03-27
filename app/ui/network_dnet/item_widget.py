@@ -446,7 +446,7 @@ class ItemWidget(QWidget):
 
     def on_req_send_clicked(self):
         if self.access_type == AccessType.EXE:
-            self.sig_req_execute_explicit(self.service_code, self.class_id, self.instance_id, self.attribute_id)
+            self.sig_req_execute_explicit.emit(self.service_code, self.class_id, self.instance_id, self.attribute_id)
         else:
             buffer = bytearray(self.size)
             self.get_bytes_data(buffer)
