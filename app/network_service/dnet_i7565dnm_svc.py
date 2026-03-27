@@ -165,6 +165,8 @@ class DnetI7565DNMSvc(QObject):
             self.sig_connect_slave_finished.emit(False)
             return
 
+        self.dll.I7565DNM_PauseIOConnection(self.current_port, mac_id)
+        
         self.is_add_io = True
 
         res_start = self.dll.I7565DNM_StartDevice(self.current_port, mac_id)
@@ -194,12 +196,14 @@ class DnetI7565DNMSvc(QObject):
         if not self._check_dll() or not self._check_module() or not self._check_slave():
             return
 
+        self.dll.I7565DNM_ResumeIOConnection(self.current_port, self.target_mac_id)
         self.poll_timer.start(interval_ms)
 
     @Slot()
     def stop_polling(self):
         self.sig_add_log.emit(MsgType.INFO, "[DnetI7565DNMSvc] Polling 중지")
 
+        self.dll.I7565DNM_PauseIOConnection(self.current_port, self.target_mac_id)
         self.poll_timer.stop()
 
 
@@ -436,6 +440,10 @@ class DnetI7565DNMSvc(QObject):
             self.dll.I7565DNM_RemoveDevice.restype = ctypes.c_uint32
             self.dll.I7565DNM_RemoveIOConnection.argtypes = [ctypes.c_uint8, ctypes.c_uint8, ctypes.c_uint8]
             self.dll.I7565DNM_RemoveIOConnection.restype = ctypes.c_uint32
+            self.dll.I7565DNM_PauseIOConnection.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+            self.dll.I7565DNM_PauseIOConnection.restype = ctypes.c_uint32
+            self.dll.I7565DNM_ResumeIOConnection.argtypes = [ctypes.c_uint8, ctypes.c_uint8]
+            self.dll.I7565DNM_ResumeIOConnection.restype = ctypes.c_uint32
             #self.sig_add_log.emit(MsgType.INFO, "DLL 로드 성공")
         except Exception as e:
             #self.sig_add_log.emit(MsgType.ERROR, f"DLL 로드 실패: {e}")
