@@ -1,0 +1,22 @@
+{
+    "poll-in": [
+        {
+            "name": "New Item",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "12",
+                    "value": 0
+                },
+                {
+                    "text": "212",
+                    "value": 1
+                }
+            ],
+            "bitmap": null
+        }
+    ],
+    "poll-out": [],
+    "explicit": []
+}

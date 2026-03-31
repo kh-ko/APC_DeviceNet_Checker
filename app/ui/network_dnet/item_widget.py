@@ -460,8 +460,22 @@ class ItemWidget(QWidget):
             self.lbl_name, self.lbl_01, self.lbl_02, 
             self.lbl_json_err, self.lbl_data_err, self.lbl_written_value
         ]
+
+        if self.input_widget:
+            widgets_to_toggle.append(self.input_widget)
+
         for w in widgets_to_toggle:
             w.setEnabled(is_enabled)
+
+        # ✨ Explicit 아이템인 경우 AccessType에 따라 읽기/쓰기 버튼 및 입력 위젯 제어
+        if self.item_type == ItemType.Explicit:
+            # EXE(Execute), WO(Write Only) 이면 읽기 버튼 비활성화
+            can_read = self.access_type not in (AccessType.EXE, AccessType.WO)
+            # RO(Read Only) 이면 쓰기(보내기) 버튼 비활성화
+            can_write = self.access_type != AccessType.RO
+
+            self.btn_req_read.setEnabled(is_enabled and can_read)
+            self.btn_req_send.setEnabled(is_enabled and can_write)
 
     def _set_error_state(self, is_error: bool):
         if is_error:

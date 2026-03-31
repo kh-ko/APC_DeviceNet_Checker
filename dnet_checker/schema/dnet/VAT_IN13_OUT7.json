@@ -1,0 +1,601 @@
+{
+    "poll-in": [
+        {
+            "name": "EXCEPTION STATUS",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "Manufacturer specific alarm present",
+                    "value": 132
+                },
+                {
+                    "text": "Manufacturer specific warning present",
+                    "value": 192
+                },
+                {
+                    "text": "No warning, no error present",
+                    "value": 128
+                }
+            ],
+            "bitmap": null
+        },
+        {
+            "name": "EXCEPTION DETAIL ALARM",
+            "type": "bitmap",
+            "ui_type": "table",
+            "enum_list": null,
+            "bitmap": [
+                {
+                    "name": "PCV Com Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Com Ex Detail B0",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Com Ex Detail B1",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B0",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B1",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B2",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B3",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "1",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B1",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Isol Valve failure",
+                        "Reserved",
+                        "PFO not ready",
+                        "Air failure",
+                        "Learn invalid",
+                        "Reserved"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B2",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "ADC not resp",
+                        "Reserved",
+                        "Reserved"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B3",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "No sensor"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B4",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "PFO off",
+                        "Simulation"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B5",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "E40",
+                        "E22",
+                        "E21",
+                        "E20"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B6",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Valve pwr off",
+                        "Setpoint invalid",
+                        "IO data missing",
+                        "Setpoint type invalid",
+                        "CTRL mode invalid"
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "EXCEPTION DETAIL WARNING",
+            "type": "bitmap",
+            "ui_type": "table",
+            "enum_list": null,
+            "bitmap": [
+                {
+                    "name": "PCV Com Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Com Ex Detail B0",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Com Ex Detail B1",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B0",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B1",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B2",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "PCV Dev Ex Detail B3",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail Size",
+                    "bits": [
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "0",
+                        "1",
+                        "1",
+                        "0"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B1",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Isol Valve failure",
+                        "Reserved",
+                        "PFO not ready",
+                        "Air failure",
+                        "Learn invalid",
+                        "Reserved"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B2",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "ADC not resp",
+                        "Reserved",
+                        "Reserved"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B3",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "No sensor"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B4",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "PFO off",
+                        "Simulation"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B5",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "E40",
+                        "E22",
+                        "E21",
+                        "E20"
+                    ]
+                },
+                {
+                    "name": "Manufacturer Ex Detail B6",
+                    "bits": [
+                        "Reserved",
+                        "Reserved",
+                        "Reserved",
+                        "Valve pwr off",
+                        "Setpoint invalid",
+                        "IO data missing",
+                        "Setpoint type invalid",
+                        "CTRL mode invalid"
+                    ]
+                }
+            ]
+        }
+    ],
+    "poll-out": [
+        {
+            "name": "SETPOINT",
+            "type": "int16",
+            "ui_type": "number",
+            "enum_list": null,
+            "bitmap": null
+        },
+        {
+            "name": "SETPOINT TYPE",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "Pressure control",
+                    "value": 0
+                },
+                {
+                    "text": "Position control",
+                    "value": 1
+                }
+            ],
+            "bitmap": null
+        }
+    ],
+    "explicit": [
+        {
+            "name": "VALVE CLOSED CHECK",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "valve is not closed",
+                    "value": 0
+                },
+                {
+                    "text": "valve is closed",
+                    "value": 1
+                }
+            ],
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 8,
+            "instance_id": 1,
+            "attribute_id": 3,
+            "access_type": "RO"
+        },
+        {
+            "name": "SETPOINT TYPE",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "pressure control",
+                    "value": 0
+                },
+                {
+                    "text": "position control",
+                    "value": 1
+                }
+            ],
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 0,
+            "attribute_id": 8,
+            "access_type": "RW"
+        },
+        {
+            "name": "CTRL MODE(PRES)",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "control mode",
+                    "value": 0
+                },
+                {
+                    "text": "close valve",
+                    "value": 1
+                },
+                {
+                    "text": "open valve",
+                    "value": 2
+                },
+                {
+                    "text": "hold",
+                    "value": 3
+                },
+                {
+                    "text": "safe state",
+                    "value": 4
+                }
+            ],
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 1,
+            "attribute_id": 5,
+            "access_type": "RW"
+        },
+        {
+            "name": "CTRL MODE(POSI)",
+            "type": "uint8",
+            "ui_type": "enum",
+            "enum_list": [
+                {
+                    "text": "control mode",
+                    "value": 0
+                },
+                {
+                    "text": "close valve",
+                    "value": 1
+                },
+                {
+                    "text": "open valve",
+                    "value": 2
+                },
+                {
+                    "text": "hold",
+                    "value": 3
+                },
+                {
+                    "text": "safe state",
+                    "value": 4
+                }
+            ],
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 5,
+            "access_type": "RW"
+        },
+        {
+            "name": "POSI SETPOINT(INT16)",
+            "type": "int16",
+            "ui_type": "number",
+            "enum_list": null,
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 6,
+            "access_type": "RW"
+        },
+        {
+            "name": "POSI SETPOINT(FLOAT)",
+            "type": "float",
+            "ui_type": "real",
+            "enum_list": null,
+            "bitmap": null,
+            "service_code": 0,
+            "class_id": 51,
+            "instance_id": 2,
+            "attribute_id": 6,
+            "access_type": "RW"
+        },
+        {
+            "name": "RESET",
+            "type": "none",
+            "ui_type": "action",
+            "enum_list": null,
+            "bitmap": null,
+            "service_code": 5,
+            "class_id": 1,
+            "instance_id": 1,
+            "attribute_id": 0,
+            "access_type": "Exe"
+        }
+    ]
+}
