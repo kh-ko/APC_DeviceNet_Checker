@@ -1,9 +1,20 @@
-from PySide6.QtWidgets import QToolBar
+from PySide6.QtWidgets import QToolBar, QProxyStyle, QStyle
 from PySide6.QtGui import QAction, QPalette
+from PySide6.QtCore import QSize
+
+class ToolbarExtensionStyle(QProxyStyle):
+    """QToolBar 내부 레이아웃이 확장 버튼 영역을 계산할 때 사용하는 픽셀 단위를 강제 오버라이드합니다."""
+    def pixelMetric(self, metric, option=None, widget=None):
+        if metric == QStyle.PixelMetric.PM_ToolBarExtensionExtent:
+            return 36 # 기존보다 3배 이상 넓은 36px로 버튼의 물리적 폭을 강제로 확보
+        return super().pixelMetric(metric, option, widget)
 
 class CustomToolBar(QToolBar):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        # 시스템(또는 qdarktheme) 스타일 위에 우리의 커스텀 메트릭(PixelMetric)을 덧씌웁니다.
+        self.setStyle(ToolbarExtensionStyle(self.style()))
 
         self.action_connect = QAction("연결", self)
         self.action_new = QAction("새로 만들기", self)
